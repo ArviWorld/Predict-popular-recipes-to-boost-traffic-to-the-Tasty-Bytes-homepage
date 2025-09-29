@@ -50,34 +50,27 @@ computational environmental management research.
 # Executive Summary {#executive-summary .unnumbered}
 
 **Problem Statement**\
-Accurately predicting .
+Recipe displays on the Tasty Bytes homepage are chosen  subjectively, leading to inconsistent customer engagement and low traffic to the website. When a popular recipe is displayed, overall site traffic increases by up to 40%, assuming that it drives more subscriptions. However, the team lacks a systematic way to predict which recipes will generate high traffic. 
 
 **Project Aim and Focus**\
-The project leverages machine learning techniques to evaluate predictive performance of .
+The aim of the project is to develop a data-driven prediction systems that identifies which recipes will lead to high homepage traffic. The focus is on achieving at least 80% accuracy in correctly predicting high-traffic recipes, thereby suppoting subscription growth and improving user engagement.
 
 **Raw data used**\
-The project uses a dataset (`recipe_site_traffic_2212.csv`) which includes the following columns:
-
--   ``: 
--   ``: 
--   ``: 
--   ``: 
--   ``: 
-
-Each row in this 
+The project uses a dataset (`recipe_site_traffic_2212.csv`) which includes variables such as, recipe, nutrient contributions and servings for the recipe, recipe category, website traffic for the recipe.
 
 **Methodology**\
-The project applies multi-class classification machine learning models to predict crop suitability from soil parameters. Key steps include:
+The project applies classification machine learning models to predict popular recipes for increasing customer engagement and thereby subscriptions. Key steps include:
 
 -   Data Exploration and Preprocessing
 -   Feature Analysis and Selection
 -   Model Selection, Development and Training
 -   Model Evaluation and Training
--   Feature Importance
+-   Deployment
+-   Iteration & Monitoring
 
 This project demonstrates how data-driven approaches can provide
-actionable insights to farmers, enabling smarter crop selection and
-promoting sustainable agricultural practices.
+actionable insights to Tasty Bytes, enabling smarter recipe selection and
+promoting customer engagement and subscriptions.
 
 **Results**\
 
@@ -86,143 +79,109 @@ promoting sustainable agricultural practices.
 
 # Introduction {#introduction}
 
-Agriculture is the backbone of food security, yet crop planning
-decisions are often based on intuition or traditional practices rather
-than scientific evidence. Every growing season, farmers have the
-critical decision making task of selecting the most suitable crop for
-their fields without a clear understanding of how soil chemistry affects
-crop performance, leading to mismatches between crop requirements and
-soil properties. Such mismatches can result in reduced yields,
-inefficient use of resources, and unsustainable farming practices.
+The success of a food platform depends heavily on engaging visitors with appealing recipes. Homepage recipes serve as the first point of contact for users, influencing how much time they spend on the site and whether they explore further. At present, recipe selection for the homepage is based on personal preference rather than systematic analysis, which leads to inconsistent performance.
 
-Accurately predicting crop types from soil parameters — such as Nitrogen
-(N), Phosphorous (P), Potassium (K), and pH — offers a more systematic
-and reliable method of aligning crop choice with soil conditions. By
-leveraging machine learning approaches, we can move from
-experience-driven decision-making to data-driven agricultural planning,
-enabling farmers to maximize yield, optimize fertilizer use, and
-contribute to sustainable land management.
+Internal observations show that if a popular recipe is displayed, website traffic can increase by up to 40%, directly contributing to subscription growth. However, without a clear method to predict which recipes will be popular, the company risks missing opportunities to maximize customer engagement and revenue.
+
+By accurately predicting recipe popularity using historical traffic data, recipe features, and contextual factors, the company can transition from intuition-driven decisions to data-driven strategy. Leveraging machine learning enables a structured approach that improves homepage performance, drives consistent growth, and enhances user experience. 
 
 # Aim and Methodology of this Project {#aim-and-methodology-of-this-project}
 
 **Aim and Focus**\
-The primary objective of this project is to determine which soil
-parameter most strongly influences crop type selection. To achieve this,
-the project employs multi-class classification techniques, where the
-target variable - crop type represents different agricultural products.
+The primary objective of this project is to predict which recipes will drive high traffic when featured on the homepage. The focus is on developing a machine learning system that can identify high-performing recipes with at least 80% accuracy, ensuring that daily recipe selections consistently optimize engagement.
 
 The focus areas are:
 
--   Identifying the single most influential soil parameter (N, P, K, pH)
-    independently with the crop type.
--   Comparing model performance when using individual features versus
-    combined features.
--   Extracting actionable insights that highlight the importance of
-    specific soil nutrients in crop cultivation.
--   Demonstrating the role of machine learning in advancing precision
-    agriculture and sustainable farming practices.
+-   Identifying the recipe attributes most strongly correlated with high traffic.
+-   Comparing model performance when using individual features versus combined features.
+-   Extracting actionable insights to guide editorial teams in recipe selection.
+-   Demonstrating how machine learning can contribute to improved digital engagement and subscription growth.
 
-This dual focus on technical model development and practical
-agricultural implications ensures that the outcomes are relevant both
-academically and in real-world agricultural systems.
+This dual focus—on technical model accuracy and real-world business application—ensures the outcomes are valuable both operationally and strategically.
 
 **Methodology**\
-The project applies multi-class classification machine learning models
-to predict crop suitability from soil parameters. Key steps include:
+The project applies classification models to predict high vs. low traffic recipes. The key steps include:
 
--   **Data Exploration and Preprocessing** - Understanding the feature
-    distribution in the dataset, handling missing values, and preparing
-    the data for modelling. - Conducted descriptive statistics and
-    visualization of soil parameters. - Identified outliers in N, P, K,
-    and pH, simulating real-world soil variability. - Encoded the
-    categorical target variable (crop) for compatibility with machine
-    learning algorithms.
--   **Feature Analysis and Selection** - Analyzing the importance and
-    contribution of individual soil parameters to crop selection. -
-    Analyzed the distribution and variance of each soil parameter. -
-    Investigated correlations between features and crop classes. -
-    Selected each feature individually to assess independent predictive
-    power.
--   **Model Selection, Development and Training** - Implemented machine
-    learning models suitable for multi-class classification, including:
-    -   Logistic Regression (multinomial setting)
-    -   Decision Trees
-    -   Random Forest Classifiers
-    -   Support Vector Machines (SVM)
-    -   Trained separate models for each soil feature (N, P, K, pH).
-    -   Built combined-feature models to evaluate improvements over
-        single-feature models.
--   **Model Evaluation and Training** - Assessed performance using
-    metrics appropriate for multi-class classification:
-    -   Accuracy
-    -   Precision, Recall, F1-score (per class and macro-averaged)
-    -   Confusion Matrix for misclassification analysis
-    -   Compared results across features and models to identify the most
-        influential parameter.
--   **Feature Importance Extraction** - For ensemble models (Random
-    Forest), calculated feature importance scores. - Cross-validated
-    findings with independent feature-level predictive results.
+**Data Exploration and Preprocessing**
 
-The outcome of this study demonstrates how data-driven approaches can
-empower farmers to make informed decisions about crop selection based on
-soil measurements while optimizing resource use and maintaining soil
-sustainability.
+-   Understanding feature distributions in historical recipe data.
+-   Handling missing values and preparing the data for modeling.
+-   Conducting descriptive statistics and visualization of recipe attributes.
+-   Encoding categorical features (e.g., cuisine type, dietary tags) for algorithm compatibility.
+
+**Feature Analysis and Selection**
+
+-   Investigating which recipe attributes most strongly influence traffic.
+-   Analyzing correlations between features (e.g., rating, ingredient type, seasonality) and traffic outcomes.
+-   Assessing predictive power of individual vs. combined features.
+
+**Model Selection, Development, and Training**
+
+-  Implementing classification models such as Logistic Regression, Decision Trees, Random Forest, and Gradient Boosted Trees (XGBoost).
+-   Training models using both individual recipe attributes and combined feature sets.
+
+**Model Evaluation**
+
+-   Assessing performance using accuracy, precision, recall, F1-score, and ROC-AUC.
+-   Comparing results across models to identify the most effective approach.
+-   Ensuring the model consistently achieves ≥80% accuracy in predicting high traffic recipes.
+
+**Feature Importance Extraction**
+
+-   Using ensemble models (Random Forest, XGBoost) to extract feature importance scores.
+-   Cross-validating with independent feature-level analysis to ensure robustness.
+
+The outcome demonstrates how data-driven recipe selection can support homepage editors in making informed, high-impact choices that drive traffic growth and increase subscriptions.
 
 # Exploratory Data Analysis - EDA {#exploratory-data-analysis-EDA}
 
-The first step of the project involves exploring the feature
-distribution in the dataset `soil_measure.csv` (downloaded from the
-Datacamp website and referenced on Kaggle website
-[here](https://www.kaggle.com/datasets/mohamedmostafa259/soil-measures)).
+The first step of the project involves exploring the distribution of features in the dataset recipes_homepage.csv (a structured dataset combining historical recipe performance and recipe attributes).
 
 **Dataset Description**
 
-The analysis uses the dataset soil_measures.csv, which contains soil
-chemical properties and corresponding recommended crops. Each row in the
-dataset represents an agricultural field sample, described by the
-following variables:
+The dataset contains recipe details, metadata, and traffic outcomes. Each row represents a recipe instance, described by the following variables:
 
--   **Nitrogen (`N`):** A key nutrient promoting leafy growth and
-    chlorophyll production.
--   **Phosphorous (`P`):** Vital for root development, seed formation,
-    and energy transfer.
--   **Potassium (`K`):** Supports water regulation, disease resistance,
-    and protein synthesis.
--   **Soil acidity/alkalinity (`pH`):** Governs nutrient availability
-    and microbial activity.
--   **Crop Type (`crop`) :** A categorical field denoting the crop
-    recommended for that soil condition.
+-   Recipe Features: Cuisine type, preparation time, dietary tags (e.g., vegan, gluten-free), seasonality indicators.
+-   Engagement Metrics: User ratings, shares, likes, past click-through rates.
+-   Contextual Factors: Day of the week, holiday flags, seasonal relevance.
+-  Traffic Outcome (Target Variable): A categorical label (e.g., High Traffic, Low Traffic) based on historical performance.
 
-This dataset provides a foundation for examining how soil chemistry
-correlates with agricultural outcomes and for building models that
-predict suitable crops based on soil characteristics.
+This dataset forms the foundation for analyzing how recipe characteristics affect engagement and for building predictive models that identify recipes likely to maximize homepage traffic.
 
-This includes, - examining the range, central tendency, and variability
-of each soil parameter. - identifying and handling missing or duplicate
-values to ensure data quality - preparing the dataset which includes
-feature scaling, encoding, and any necessary transformation for
-facilitating accurate predictive modelling.
+The analysis includes:
+
+-   Examining central tendencies, ranges, and variability of recipe features.
+-   Identifying and handling missing, duplicate, or inconsistent records.
+-   Preparing the dataset with scaling, encoding, and transformations to enable accurate predictive modeling.
 
 ## Load required libraries
 
-First, loading the libraries and packages in R that are needed for the
-success of the `Sowing Success` project. The selected libraries provide
-functions for handling data, building and performing machine learning
-tasks, and visualizing results.
+First, load the necessary libraries in R/Python that are essential for the success of the **“Recipe Popularity Prediction”** project. These include packages for data handling, machine learning, and visualization.
 
 ```{r loading libraries, message = FALSE, warning = FALSE}
 
 # Operational libraries
 library(tidyverse)    # Data manipulation and visualization
 
+
 # Visualization
 library(ggplot2)      # Powerful and flexible plotting 
+library(naniar)       # Visualize missing values
 library(kableExtra)   # Table styling
 library(corrplot)     # Correlation plots
+library(gridExtra)    # Arranging multiple plots
+library(patchwork)    # Arranging multiple plots
 
 # Modelling
-library(caret)        # Splitting dataset into train and test data 
-library(nnet)         # Multinomial Logistic Regression Model
+library(caret)        # Splitting dataset and model evaluation
+library(glmnet)       # Regularized logistic regression
+library(randomForest) # Random Forest Model
+library(xgboost)      # Gradient boosting Model
+
+# Model metrics and evaluation 
+library(ModelMetrics) # ML Model metrics
+library(pROC)         # ROC curves and AUC metrics
+library(DALEX)        # Model interpretability
 
 ```
 
@@ -230,41 +189,213 @@ library(nnet)         # Multinomial Logistic Regression Model
 
 ### Data Loading
 
-Loading the dataset `soil_measures.csv` for exploring the dataset and
+Loading the dataset `recipe_site_traffic_2212.csv` for exploring the dataset and
 performing EDA.
 
 ```{r data loading}
 
-path <- "D:/Study/Machine Learning/Projects/Completed projects for GitHub/Sowing-Success-How-Machine-Learning-Helps-Farmers-Select-the-Best-Crops/Data/soil_measures.csv"
+path <- "D:/Study/Machine Learning/Projects/Completed projects for GitHub/Predict-popular-recipes-to-boost-traffic-to-the-Tasty-Bytes-homepage/Raw Data/recipe_site_traffic_2212.csv"
 
 # load the dataset
-soil_data <- read.csv(path)
+recipe_df <- read.csv(path)
 
-kable(head(soil_data), caption = "Soil Measurements") %>%
+kable(head(recipe_df), caption = "Soil Measurements") %>%
+  kable_styling(full_width = F, position = "left")
+
+# Structure of the dataset
+str(recipe_df)
+
+```
+This dataset contains .
+
+### Data Exploration
+
+The structure and summary statistics of the dataset are examined to
+understand the data types, ranges, and distributions of each feature.
+
+```{r data exploration}
+
+# Changing the datatypes for efficient analysis
+recipe_df$servings = as.integer(recipe_df$servings)
+
+# Realigning the variable names for easy use and readability
+recipe_df <- recipe_df %>%
+  select(recipe, category, servings, calories, 
+         carbohydrate, sugar, protein, traffic = high_traffic)
+
+# Statistical Summary of the dataset
+kable(summary(recipe_df), caption = "Descriptive Statistics of Recipe Dataset") %>%
   kable_styling(full_width = F, position = "left")
 
 ```
 
 
+``` {r data processing, warning = FALSE, message = FALSE}
+
+# Check for duplicate values
+duplicate_values <- sum(duplicated(recipe_df))
+
+kable(duplicate_values, caption = "Duplicated values in the Dataset") %>%
+  kable_styling(full_width = F, position = "left")
+
+# Visualizing the missing values
+recipe_miss <- recipe_df %>%
+  select(where(~ any(is.na(.))))
+
+miss_h_p1 <- vis_miss(recipe_miss, cluster = TRUE, sort_miss = TRUE) +
+  ggtitle("Heatmap of Missing values by similarity")
+miss_h_p2 <- gg_miss_var(recipe_miss) +
+  ggtitle("Missing values by Variable")
+
+# Plotting
+miss_h_p1 + miss_h_p2
+
+```
+
+
+``` {r missing summary}
+# Missing data summary grouped by category
+nutrient_vars <- c("calories", "carbohydrate", "sugar", "protein")
+common_na_vars <- c("calories", "carbohydrate", "sugar", "protein", "traffic")
+
+missing_summary <- recipe_df %>%
+  group_by(category) %>%
+  summarize(
+    frequency = as.integer(n()),
+    rows_with_any_na = sum((if_any(everything(), is.na))),
+    rows_ht_na = sum(is.na(traffic)),
+    rows_nutrient_na = sum(if_all(all_of(nutrient_vars), is.na)),
+    rows_with_5_na_var = sum(if_all(all_of(common_na_vars), is.na)),
+    rows_ht_ser = sum(is.na(servings)),
+    .groups = "drop"
+  ) 
+
+# Total across columns
+total_row <- tibble(
+    category = "Total",
+    frequency = sum(missing_summary$frequency),
+    rows_with_any_na = sum(missing_summary$rows_with_any_na),
+    rows_ht_na = sum(missing_summary$rows_ht_na),
+    rows_nutrient_na = sum(missing_summary$rows_nutrient_na),
+    rows_with_5_na_var = sum(missing_summary$rows_with_5_na_var),
+    rows_ht_ser = sum(missing_summary$rows_ht_ser)
+)
+
+missing_summary <- bind_rows(missing_summary, total_row)
+
+kable(missing_summary, caption = "Distribution of Missing values grouped by Category - Recipe Dataset") %>%
+  kable_styling(full_width = F, position = "left")
+
+```
+
+Almost about 10.3% of the observations are missing. The recipe, category, servings do not contain any missing values. Missing valeus are in the high_traffic, calories, carbohydrates, sugar and protein. The high traffic variable has the highest number of missing values more than 300. The sugar, protein, carbohydrate and calories are missing and a small portion of all these variables were missing.
+
+Missing values in the calories, carbohydrates, sugar and protein are all missing together in the same observation. Few NAs in the high traffic correlate with this. 
+
+Out of 947 observations, 
+-   412 observations are missing
+-   373 `high_traffic` observations are missing, This seems that the target variable has almost half of the missing values in relation to the total rows. ONly High is recorded and it measn the missing valeus must be Low
+-   52 observations are missing only in the nutrient composition variables and is at the same rows for differnt categories (>>>>>)
+-   13 observations are missing both in `high_traffic` and nutrient composition
+-   3 observations are missing in `servings` variable, particularly in the `lunch/snacks` category
+
+Each recipe is different and has its own nutrient composition and although belonging to the different groups. The missing values in the nutrient composition can be averaged as per group category and per servings, as these observations are missing all together and can be assumed that it can be averaged based on the category and per servings and then multiplies with the number of servings per recipe. 
+
+Looking at the missing values of the `high_traffic`, the observations recorded are only high and NAs. So, assuming that all the NAs are not recorded as it scores low traffic for the recipe. So imputing all the NAs in the high traffic with `low` makes more sense. 
+
+
+``` {r missing imputation, warning  = FALSE, message = FALSE}
+
+# Calculating the nutrient composition per serving for all observations
+recipe_df <- recipe_df %>%
+  group_by(category) %>%
+  mutate(across(all_of(nutrient_vars), 
+                ~ .x / servings, 
+                .names = "{.col}_per_serving")) %>%
+  mutate(across(all_of(nutrient_vars_per_serving),
+                ~ ifelse(is.na(.x), mean(.x, na.rm = TRUE), .x))) %>%
+  ungroup()
+
+kable(head(recipe_df), caption = "Recipe dataset with nutrient values per serving") %>%
+  kable_styling(full_width = F, position = "left")
+
+# Imputing all the high_traffic NAs with `Low`
+recipe_clean <- recipe_df %>%
+  mutate(traffic = factor(
+    if_else(is.na(traffic), "Low", traffic),
+    levels = c("Low", "High")))
+
+# Imputing the missing values in the servings and nutrient composition of the category
+# Imputing the missing serving values in Lunch/Snack Category
+recipe_clean <- recipe_clean %>%
+  rowwise() %>%
+  mutate(
+    servings = ifelse(
+      is.na(servings),
+      round(mean(c_across(all_of(nutrient_vars)) /
+                   c_across(all_of(nutrient_vars_per_serving)), 0)), 
+      servings)) %>%
+  ungroup()
+
+# Imputing the missing nutrient composition values 
+recipe_clean <- recipe_clean %>%
+  rowwise() %>%
+  mutate(across(
+    all_of(nutrient_vars),
+    ~ ifelse(is.na(.x),
+             c_across(all_of(paste0(cur_column(), "_per_serving"))) * servings, .x))) %>%
+  ungroup()
+
+recipe_clean <- recipe_clean %>%
+  select(-ends_with("_per_serving"))
+
+kable(head(recipe_clean), caption = "Cleaned Recipe dataset") %>%
+  kable_styling(full_width = F, position = "left")
+
+```
+
+## Data Visualization
 
 
 
 
+**EDA Outcome and Insights**
+The target variable has a kind of 
 
 
+# Machine Learning Models
 
+The EDA analysis suggests that .
 
+**Model Selection**\
+Given the .
 
+**Data Split and Model Training**\
+The dataset is split into training and testing sets to evaluate model
+performance on unseen data. A common split ratio is 70% for training and
+30% for testing. The models are trained using the training set, and
+hyperparameter tuning is performed using grid search or random search
+methods to optimize model performance.
 
+```{r data split}
 
+# Set seed for reproducibility
+set.seed(123)           
 
+# Split into training and test datasets
+train_index <- createDataPartition(recipe_clean$traffic, p = 0.7, list = FALSE)
+train_data <- recipe_clean[train_index, ]
+test_data <- recipe_clean[-train_index, ]
 
+# Checking the dimension of the train and test data
+dim(train_data)
+dim(test_data)
 
+# Checking the class distribution of the train and test datasets
+table(train_data$traffic)
+table(test_data$traffic)
 
-
-
-
-
+```
 
 
 
