@@ -1,6 +1,6 @@
 ---
-title: "Sowing Success: How Machine Learning Helps Farmers Select the Best Crops"
-subtitle: "Building multi-class classification models to predict the Crop Type and identify the single most importance feature for predictive performance"
+title: "Predicting Recipe for Taste Bytes Homepage"
+subtitle: "Building classification models to predict the recipe for enhancing website traffic"
 dataset_by: "Dataset provided by Datacamp"
 author: "Aravindh Venkatraman"
 date: "21 September 2025"
@@ -163,9 +163,9 @@ First, load the necessary libraries in R/Python that are essential for the succe
 # Operational libraries
 library(tidyverse)    # Data manipulation and visualization
 
-
 # Visualization
-library(ggplot2)      # Powerful and flexible plotting 
+library(ggplot2)      # Powerful and flexible plotting
+library(GGally)       # Pair plot
 library(naniar)       # Visualize missing values
 library(kableExtra)   # Table styling
 library(corrplot)     # Correlation plots
@@ -312,12 +312,9 @@ recipe_df <- recipe_df %>%
   mutate(across(all_of(nutrient_vars), 
                 ~ .x / servings, 
                 .names = "{.col}_per_serving")) %>%
-  mutate(across(all_of(nutrient_vars_per_serving),
-                ~ ifelse(is.na(.x), mean(.x, na.rm = TRUE), .x))) %>%
+  mutate(round(across(all_of(nutrient_vars_per_serving),
+                ~ ifelse(is.na(.x), mean(.x, na.rm = TRUE), .x)), 2)) %>%
   ungroup()
-
-kable(head(recipe_df), caption = "Recipe dataset with nutrient values per serving") %>%
-  kable_styling(full_width = F, position = "left")
 
 # Imputing all the high_traffic NAs with `Low`
 recipe_clean <- recipe_df %>%
@@ -354,10 +351,173 @@ kable(head(recipe_clean), caption = "Cleaned Recipe dataset") %>%
 
 ```
 
-## Data Visualization
+### Data Visualization
+
+Data visualization is performed to understand the distribution of each
+soil parameters and the relationship between the features. The
+visualizations include histograms, box plots, and correlation matrices.
+
+**Distribution of Recipe Features**
 
 
+**Histograms / Density Plots**
+- `calories`, `carbohydrate`, `sugar`, `protein`, `servings`
+- Helps identify skewness, outliers, and feature scaling needs.
 
+``` {r recipe distribution, warning = FALSE, message = FALSE}
+
+# Histogram and Density plots for nutrient composition
+histogram <- recipe_clean %>%
+  gather(key = "nutrients", value = "value", nutrient_vars) %>%
+  ggplot(aes(x = value, fill = nutrients)) +
+  geom_histogram(aes(y = ..density..), binwidth = 0.3, alpha = 1) +
+  geom_density(alpha = 0.5) +
+  scale_x_log10() +
+  facet_wrap(~ nutrients, scales = "free") +
+  labs(title = "Distribution of Nutrient composition",
+     x = "Value",
+     y = "Count") +
+  theme_minimal()
+ 
+histogram
+
+```
+
+Histogram distribution shows right skewed tailed, which means that there are lot of higher values. Hence, log scale transformation is required and shows almostnormal distibution for all nutrient composition. It seems like there are outliers in each nutrient components but each outlier is representable for the analysis as each recipe has its own nutrient composition. 
+
+**Boxplots** (lets see what to do with this)
+
+``` {r outlier detection, warning = FALSE, message = FALSE}
+
+# Identify outliers using IQR method
+outlier_summary <- function (x) {
+  Q1 <- quantile(x, 0.25)
+  Median <- median(x)
+  Q3 <- quantile(x, 0.75)
+  IQR <- Q3 - Q1
+  lower <- Q1 - 1.5 * IQR
+  upper <- Q3 + 1.5 * IQR
+  outlier_lower <- sum(x < lower) 
+  outlier_upper <- sum(x > upper)
+  
+  df <- data.frame(
+    Q1 = Q1, Q3 = Q3, IQR = IQR,
+    Lower_threshold = lower, 
+    Median = Median,
+    Upper_threshold = upper,
+    Num_Outlier_Lower = outlier_lower, 
+    Num_Outlier_Upper = outlier_upper
+    )
+  rownames(df) <- NULL
+  return(df)
+}
+
+# Apply this function to each numeric column
+outlier_table <- lapply(recipe_clean %>% select(nutrient_vars), outlier_summary) 
+names(outlier_table) <- colnames(recipe_clean %>% select(nutrient_vars))
+
+# Combine the results into a single data frame
+outlier_table <- bind_rows(outlier_table, .id = "nutrients")
+
+kable(outlier_table, caption = "Outlier Summary for Nutrient composition") %>%
+  kable_styling(full_width = F, position = "center")
+
+# Reshape the outlier summary table for visualization
+outlier_long <- outlier_table %>%
+  select(nutrients, Lower_threshold, Median, Upper_threshold) %>%
+  pivot_longer(cols = c(Lower_threshold, Median, Upper_threshold),
+               names_to = "Quantile",
+               values_to = "Value")
+
+# Box plots for the nutrients composition and servings
+boxplots <- recipe_clean %>%
+  gather(key = "nutrients", value = "value", nutrient_vars) %>%
+  ggplot(aes(x = category, y = value, fill = nutrients)) +
+  geom_boxplot() +
+  facet_wrap(~ nutrients, scales = "free") +
+  # Add quantile lines
+  geom_hline(data = outlier_long, 
+             aes(yintercept = Value, 
+                 linetype = Quantile, 
+                 color = Quantile), 
+             inherit.aes = FALSE, linewidth = 0.7, alpha = 0.9) +
+  facet_wrap(~ nutrients, scales = "free") +
+  scale_color_manual(values = c(Lower_threshold = "orange", 
+                                Median = "green", 
+                                Upper_threshold = "red")) +
+  scale_linetype_manual(values = c(Lower_threshold = "dashed", 
+                                   Median = "solid", 
+                                   Upper_threshold = "dashed")) +
+  labs(title = "Box plot of Nutrient composition", 
+       x = "Value",
+       y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, size = 10))
+
+boxplots
+
+```
+There are many outliers mostly upper,
+-   calories  = 43
+-   carbohydrate = 54
+-   sugar = 80
+-   protein = 83
+
+Out of 947 observations, these outliers are very low and each outlier is representable as each recipe has its own nutrient composition. 
+
+**Traffic Insights**
+**Bar Plot / Count Plot**
+
+```{r traffic box, warning = FALSE, message = FALSE}
+
+# Bar plot for traffic across different categories 
+recipe_clean %>%
+  ggplot(aes(x = category, fill = traffic)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Bar plot for traffic across different categories", 
+       x = "Value",
+       y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, size = 10))
+
+recipe_clean %>%
+  ggplot(aes(x = servings, fill = traffic)) +
+  geom_bar(position = "dodge") +
+  labs(title = "Bar plot for traffic across different servings", 
+       x = "Value",
+       y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, size = 10))
+
+# Histogram plot of traffic across nutrient composition
+bar_nutrient <- recipe_clean %>%
+  gather(key = "nutrients", value = "value", nutrient_vars) %>%
+  ggplot(aes(x = value, fill = traffic)) +
+  geom_histogram(position = "dodge", binwidth = 50, alpha = 0.7) +
+  facet_wrap(~ nutrients, scales = "free") +
+  labs(title = "Distribution of Nutrient composition",
+     x = "Value",
+     y = "Count") +
+  theme_minimal()
+ 
+bar_nutrient
+
+```
+
+**Feature Relationships**
+Pair Plot / Scatterplot Matrix
+Correlation Heatmap
+
+```{r feature relationhship, warning = FALSE, message = FALSE}
+
+# Correlation Matrix for the soil parameters
+cor_matrix <- cor(recipe_clean %>% select(c(nutrient_vars)))
+corrplot(cor_matrix, method = "circle", type = "upper",
+         tl.col = "black", tl.srt = 45,
+         title = "Correlation Matrix of nutrient composition",
+         mar = c(0,0,1,0))
+
+```
 
 **EDA Outcome and Insights**
 The target variable has a kind of 
@@ -397,19 +557,25 @@ table(test_data$traffic)
 
 ```
 
+# Machine Learning Model {#machine-learning-model}
 
+The machine learning models are built using the training dataset, and
+their performance is evaluated on the testing dataset. The models are
+trained using the soil parameters (N, P, K, pH) as features to predict
+the crop type.
 
+## Logistic Regression
 
+**After modelling EDA visualization**
 
+Feature Importance / Predictive Insights
+Feature Importance Bar Plot
+Partial Dependence Plot
 
-
-
-
-
-
-
-
-
+Optional Advanced Visualizations
+PCA / t-SNE Plot
+Radar / Spider Chart
+Heatmap of Traffic by Category and Servings
 
 
 
