@@ -344,10 +344,20 @@ recipe_clean <- recipe_clean %>%
   ungroup()
 
 recipe_clean <- recipe_clean %>%
-  select(-ends_with("_per_serving"))
+  select(-ends_with("_per_serving")) %>%
+  select(-recipe) %>%
+  mutate(traffic = as.factor(traffic))
 
 kable(head(recipe_clean), caption = "Cleaned Recipe dataset") %>%
   kable_styling(full_width = F, position = "left")
+```
+
+```{r}
+
+recipe_clean %>%
+  filter(if_all(everything(),is.na))
+
+str(recipe_clean)
 
 ```
 
@@ -493,7 +503,7 @@ recipe_clean %>%
 bar_nutrient <- recipe_clean %>%
   gather(key = "nutrients", value = "value", nutrient_vars) %>%
   ggplot(aes(x = value, fill = traffic)) +
-  geom_histogram(position = "dodge", binwidth = 50, alpha = 0.7) +
+  geom_histogram(position = "dodge", binwidth = 50) +
   facet_wrap(~ nutrients, scales = "free") +
   labs(title = "Distribution of Nutrient composition",
      x = "Value",
@@ -540,20 +550,32 @@ methods to optimize model performance.
 ```{r data split}
 
 # Set seed for reproducibility
-set.seed(123)           
+set.seed(123)
+str(recipe_clean)
 
 # Split into training and test datasets
 train_index <- createDataPartition(recipe_clean$traffic, p = 0.7, list = FALSE)
-train_data <- recipe_clean[train_index, ]
-test_data <- recipe_clean[-train_index, ]
+train <- recipe_clean[train_index, ]
+test <- recipe_clean[-train_index, ]
 
-# Checking the dimension of the train and test data
-dim(train_data)
-dim(test_data)
+# Dummy encoding for categorical variables
+dummies <- dummyVars(traffic ~., data = train)
 
-# Checking the class distribution of the train and test datasets
-table(train_data$traffic)
-table(test_data$traffic)
+train_dummy <- predict(dummies, newdata = train)
+test_dummy <- predict(dummies, newdata = test)
+
+# Add back target column
+train_proc <- data.frame(train_dummy, traffic = train$traffic)
+test_proc <- data.frame(test_dummy, traffic = test$traffic)
+
+# PreProcessing the recipe_clean dataset for normalization across models
+preProc <- preProcess(train, method = c('center', 'scale'))
+
+train_final <- predict(preProc, train_proc)
+test_final <- predict(preProc, test_proc)
+
+str(train_final)
+str(test_final)
 
 ```
 
@@ -564,9 +586,145 @@ their performance is evaluated on the testing dataset. The models are
 trained using the soil parameters (N, P, K, pH) as features to predict
 the crop type.
 
-## Logistic Regression
+**Model Metric and Evaluation**
 
-**After modelling EDA visualization**
+```{r model eval formula, warning = FALSE, message = TRUE}
+
+# Functions to plot confusion matrix
+plot_cm <- function(cm, title = "Confusion Matrix") {
+  cm_df <- as.data.frame(cm$table)
+  colnames(cm_df) <- c("Prediction", "Reference", "Frequency")
+  
+  ggplot(cm_df, aes(x = Reference, y = Prediction, fill = Frequency)) +
+    geom_tile(aes(fill = Frequency), color = "white") +
+    scale_fill_gradient(low = "lightblue", high = "steelblue") +
+    geom_text(aes(label = Frequency), color = "black", size = 6) +
+    theme_minimal() +
+    ggtitle(title)
+}
+
+# Function to get metrics for the model
+get_metrics <- function(cm){
+  accuracy <- as.numeric(cm$overall["Accuracy"])
+  sensitivity <- as.numeric(cm$byClass["Sensitivity"])
+  specificity <- as.numeric(cm$byClass["Specificity"])
+  precision <- as.numeric(cm$byClass["Pos Pred Value"])
+  if(!is.na(precision) & !is.na(sensitivity)){
+    f1 <- 2 * ((precision * sensitivity) / (precision + sensitivity))
+  } else {
+    f1 <- NA
+  }
+  
+  
+  return(c(Accuracy = accuracy,
+           Precision = precision,
+           Recall = sensitivity,
+           Specificity = specificity,
+           F1_score = f1))
+}
+
+```
+
+## Logistic Regression
+Multinomial logistic regression model is built and looped with every
+soil feature/parameter to evaluate the performance using the model
+metrics. To evaluate the predictive power of individual soil parameters,
+a feature-wise modeling approach was applied. In this step, separate
+ logistic regression models were trained using each explanatory variable independently to predict the target variable
+recipe. 
+
+Finally, the results were displayed in a formatted table, enabling a
+direct comparison of soil parameter effectiveness in predicting crop
+type.
+
+```{r logistic regression, message = FALSE, warning = FALSE}
+
+# Building the logistic regression model
+log_model <- train(traffic ~ . + 0, data = train_final,
+                   method = 'glm', family = "binomial",
+                   trControl = trainControl(method = 'cv',
+                              number = 5))
+
+coef(log_model$finalModel)
+
+# Predict the target variable using the test data
+log_preds <- predict(log_model, test_final)
+
+
+
+# Construct the confusion matrix
+log_cm <- caret::confusionMatrix(log_preds, test_final$traffic)
+
+# Plotting the confusion matrix
+plot_cm(log_cm, title = "Logistic Regression - Confusion Matrix")
+
+# Variable importance
+plot(varImp(log_model, scale = TRUE, 
+            top = 15, main = "Logistic Regression Variable Importance"))
+
+# Logistic regression model results
+log_results <- get_metrics(log_cm)
+
+model_results <- data.frame(
+  Model = "Logistic Regression",
+  Accuracy    = log_results["Accuracy"],
+  Precision   = log_results["Precision"],
+  Recall      = log_results["Recall"],
+  Specificity = log_results["Specificity"],
+  F1_Score    = log_results["F1_score"],
+  row.names = NULL
+)
+
+# Print the results
+kable(model_results, caption = "Logistic Regression Model Results") %>%
+  kable_styling(full_width = F, position = "left")
+
+```
+
+**Random Forest**
+
+```{r rf model, message = FALSE, warning = FALSE}
+
+# Building the logistic regression model
+rf_model <- train(traffic ~ ., data = train_final,
+                  method = 'rf', 
+                  trControl = trainControl(method = 'cv',
+                              number = 5),
+                  importance = TRUE)
+
+# Predict the target variable using the test data
+rf_preds <- predict(rf_model, test_final)
+
+# Construct the confusion matrix
+rf_cm <- caret::confusionMatrix(rf_preds, test_final$traffic)
+
+# Plotting the confusion matrix
+plot_cm(rf_cm, title = "Logistic Regression - Confusion Matrix")
+
+# Variable importance
+plot(varImp(rf_model, scale = TRUE, 
+            top = 15, main = "Logistic Regression Variable Importance"))
+
+# Logistic regression model results
+rf_results <- get_metrics(rf_cm)
+
+model_results <- data.frame(
+  Model = "Random Forest",
+  Accuracy    = rf_results["Accuracy"],
+  Precision   = rf_results["Precision"],
+  Recall      = rf_results["Recall"],
+  Specificity = rf_results["Specificity"],
+  F1_Score    = rf_results["F1_score"],
+  row.names = NULL
+)
+
+# Print the results
+kable(model_results, caption = "Random Forest Results") %>%
+  kable_styling(full_width = F, position = "left")
+
+```
+
+**After modelling EDA visualization** 
 
 Feature Importance / Predictive Insights
 Feature Importance Bar Plot
