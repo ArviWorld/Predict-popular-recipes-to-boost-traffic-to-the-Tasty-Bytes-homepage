@@ -162,15 +162,18 @@ First, load the necessary libraries in R/Python that are essential for the succe
 
 # Operational libraries
 library(tidyverse)    # Data manipulation and visualization
+library(dplyr)        # Data manuipulation
 
 # Visualization
 library(ggplot2)      # Powerful and flexible plotting
 library(GGally)       # Pair plot
+library(ggfortify)
 library(naniar)       # Visualize missing values
 library(kableExtra)   # Table styling
 library(corrplot)     # Correlation plots
 library(gridExtra)    # Arranging multiple plots
 library(patchwork)    # Arranging multiple plots
+library(Rtsne) 
 
 # Modelling
 library(caret)        # Splitting dataset and model evaluation
@@ -641,16 +644,24 @@ type.
 
 # Building the logistic regression model
 log_model <- train(traffic ~ . + 0, data = train_final,
-                   method = 'glm', family = "binomial",
+                   method = 'glmnet', family = "binomial",
                    trControl = trainControl(method = 'cv',
                               number = 5))
 
-coef(log_model$finalModel)
-
 # Predict the target variable using the test data
 log_preds <- predict(log_model, test_final)
+log_probs <- predict(log_model, test_final, type = "prob")[, "High"] # for ROC curve
 
+# ROC Curve and AUC
+log_roc <- roc(response = test_final$traffic,
+               predictor = log_probs)
 
+plot(log_roc, col = "steelblue", lwd = 2, main = "ROC CURve - Logistic Regression")
+auc(log_roc)
+
+# Variable importance
+plot(varImp(log_model, scale = TRUE, 
+            top = 15, main = "Logistic Regression Variable Importance"))
 
 # Construct the confusion matrix
 log_cm <- caret::confusionMatrix(log_preds, test_final$traffic)
@@ -658,14 +669,10 @@ log_cm <- caret::confusionMatrix(log_preds, test_final$traffic)
 # Plotting the confusion matrix
 plot_cm(log_cm, title = "Logistic Regression - Confusion Matrix")
 
-# Variable importance
-plot(varImp(log_model, scale = TRUE, 
-            top = 15, main = "Logistic Regression Variable Importance"))
-
 # Logistic regression model results
 log_results <- get_metrics(log_cm)
 
-model_results <- data.frame(
+model_log_results <- data.frame(
   Model = "Logistic Regression",
   Accuracy    = log_results["Accuracy"],
   Precision   = log_results["Precision"],
@@ -676,7 +683,7 @@ model_results <- data.frame(
 )
 
 # Print the results
-kable(model_results, caption = "Logistic Regression Model Results") %>%
+kable(model_log_results, caption = "Logistic Regression Model Results") %>%
   kable_styling(full_width = F, position = "left")
 
 ```
@@ -695,20 +702,20 @@ rf_model <- train(traffic ~ ., data = train_final,
 # Predict the target variable using the test data
 rf_preds <- predict(rf_model, test_final)
 
+# Variable importance
+plot(varImp(rf_model, scale = TRUE, 
+            top = 15, main = "Logistic Regression Variable Importance"))
+
 # Construct the confusion matrix
 rf_cm <- caret::confusionMatrix(rf_preds, test_final$traffic)
 
 # Plotting the confusion matrix
 plot_cm(rf_cm, title = "Logistic Regression - Confusion Matrix")
 
-# Variable importance
-plot(varImp(rf_model, scale = TRUE, 
-            top = 15, main = "Logistic Regression Variable Importance"))
-
 # Logistic regression model results
 rf_results <- get_metrics(rf_cm)
 
-model_results <- data.frame(
+model_rf_results <- data.frame(
   Model = "Random Forest",
   Accuracy    = rf_results["Accuracy"],
   Precision   = rf_results["Precision"],
@@ -719,6 +726,25 @@ model_results <- data.frame(
 )
 
 # Print the results
+kable(model_rf_results, caption = "Random Forest Results") %>%
+  kable_styling(full_width = F, position = "left")
+
+```
+
+# Model Results and Evaluation
+
+```{r model results, warning = FALSE, message = TRUE}
+
+combined_results <- bind_rows(model_log_results, model_rf_results)
+
+model_results <- combined_results %>%
+  select(-Model) %>%
+  t() %>%
+  as.data.frame() %>%
+  rownames_to_column(var = "Metric") 
+
+colnames(model_results)[-1] <- combined_results$Model
+
 kable(model_results, caption = "Random Forest Results") %>%
   kable_styling(full_width = F, position = "left")
 
@@ -726,12 +752,111 @@ kable(model_results, caption = "Random Forest Results") %>%
 
 **After modelling EDA visualization** 
 
+```{r var imp plot, warning = FALSE, message = FALSE}
+
+# If using glmnet or sparse matrix coefficients
+log_coef <- coef(log_model$finalModel, s = log_model$bestTune$lambda)
+
+# Prepare the log reg importance
+log_varimp <- data.frame(
+  Variable = rownames(log_coef),
+  Importance = abs(as.numeric(log_coef))
+) %>% filter(Variable != "(Intercept)")
+log_varimp$Model <- "Logistic Regression"
+
+# Random Forest variable Importancec
+rf_varimp <- varImp(rf_model)$importance
+rf_varimp$Variable <- rownames(rf_varimp)
+rf_varimp <- rf_varimp %>% 
+  select(Variable, Importance = High)
+rf_varimp$Model <- "Random Forest"
+
+# combine the two 
+model_varimp <- bind_rows(log_varimp, rf_varimp)
+model_varimp <- model_varimp %>%
+  group_by(Model) %>%
+  mutate(ScaledImportance = 100 * Importance/ max(Importance)) %>%
+  ungroup()
+
+
+# plot the var imp
+ggplot(model_varimp, 
+       aes(x = reorder(Variable, ScaledImportance),
+           y = ScaledImportance, fill = Model)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  coord_flip() +
+  labs(title ="Variable Importance: Logistice Regression vs Random Forest",
+       x = "Variables",
+       y = "ScaledImportance") +
+  theme_minimal()
+
+
+```
+
 Feature Importance / Predictive Insights
 Feature Importance Bar Plot
 Partial Dependence Plot
 
 Optional Advanced Visualizations
 PCA / t-SNE Plot
+```{r PCA / t-SNE plot}
+
+# PCA
+pca_res <- prcomp(train_final[, -which(names(train_final) == "traffic")], scale. = TRUE)
+autoplot(pca_res, data = train_final, colour = 'traffic') +
+  labs(title = "PCA of Recipes")
+
+# Heatmap of Traffic by Category and Servings
+heatmap_data <- recipe_clean %>%
+  group_by(category, servings, traffic) %>%
+  summarise(count = n(), .groups = "drop")
+
+ggplot(heatmap_data, aes(x = as.factor(servings), y = category, fill = count)) +
+  geom_tile(color = "white") +
+  facet_wrap(~traffic) +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Heatmap of Traffic by Category and Servings",
+       x = "Servings", y = "Category", fill = "Count") +
+  theme_minimal()
+
+# Radar / Spider Chart
+library(fmsb)
+
+# Summarize averages by category
+radar_data <- recipe_clean %>%
+  group_by(category) %>%
+  summarise(
+    calories = mean(calories, na.rm = TRUE),
+    carbohydrate = mean(carbohydrate, na.rm = TRUE),
+    sugar = mean(sugar, na.rm = TRUE),
+    protein = mean(protein, na.rm = TRUE)
+  ) %>%
+  as.data.frame()
+
+# fmsb needs first 2 rows = max & min values for scaling
+max_vals <- apply(radar_data[,-1], 2, max, na.rm = TRUE)
+min_vals <- apply(radar_data[,-1], 2, min, na.rm = TRUE)
+radar_ready <- rbind(max_vals, min_vals, radar_data[,-1])
+rownames(radar_ready) <- c("max", "min", radar_data$category)
+
+# Plot with larger size & smaller text
+par(mar=c(1,1,1,1))  # reduce margins
+radarchart(radar_ready,
+           axistype = 1,
+           pcol = rainbow(nrow(radar_ready)-2),
+           plwd = 2,
+           cglcol = "grey",
+           cglty = 1,
+           axislabcol = "grey20",
+           caxislabels = seq(0, max(max_vals), length.out = 5),
+           cglwd = 0.8,
+           vlcex = 0.7)   # reduce variable label text size
+legend("topright", legend = radar_data$category,
+       col = rainbow(nrow(radar_ready)-2), lty = 1, cex = 0.6) 
+
+```
+
+
 Radar / Spider Chart
 Heatmap of Traffic by Category and Servings
 
