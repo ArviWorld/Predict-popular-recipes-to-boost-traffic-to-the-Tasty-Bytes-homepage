@@ -155,7 +155,9 @@ library(kableExtra)   # Table styling
 library(corrplot)     # Correlation plots
 library(gridExtra)    # Arranging multiple plots
 library(patchwork)    # Arranging multiple plots
-library(Rtsne) 
+library(Rtsne)
+library(Ckmeans.1d.dp)  # required
+library(DiagrammeR)
 
 # Modelling
 library(caret)        # Splitting dataset and model evaluation
@@ -501,6 +503,7 @@ heatmap_data <- recipe_clean %>%
 ggplot(heatmap_data, aes(x = as.factor(servings), y = category, fill = count)) +
   geom_tile(color = "white", alpha = 0.8) +
   facet_wrap(~traffic) +
+  scale_fill_gradient(low = "#1b9e77", high = "#d95f02") +
   labs(title = "Heatmap of Traffic by Category and Servings",
        x = "Servings", y = "Category", fill = "Count") +
   theme_minimal()
@@ -615,7 +618,7 @@ Model Metrics Dataframe – A consolidated table of performance metrics (Accurac
 true_labels <- test_final$traffic
 
 # Function to plot ROC with AUC and highlighted threshold point
-oc_to_df <- function(roc_obj, model_name = "Model") {
+roc_to_df <- function(roc_obj, model_name = "Model") {
   # Full ROC curve
   roc_df <- data.frame(
     FPR = 1 - roc_obj$specificities,
@@ -633,6 +636,9 @@ oc_to_df <- function(roc_obj, model_name = "Model") {
     Model = model_name)
   # Compute AUC
   auc_val <- as.numeric(auc(roc_obj))
+  # Add auc_val column to roc_df
+  roc_df$AUC <- auc_val
+  point_df$AUC <- auc_val
   # Return all
   return(list(
     roc_df = roc_df,
@@ -673,6 +679,37 @@ get_metrics <- function(cm, auc_val, model_name = "Model"){
   return(df)
 }
 
+# Function to plot variabe importance for models
+plot_all_varimp <- function(models, model_names) {
+  
+  varimps <- lapply(seq_along(models), function(i) {
+    vi <- varImp(models[[i]], scale = TRUE)$importance
+    
+    vi <- vi %>%
+      tibble::rownames_to_column("Variable") %>%
+      mutate(Model = model_names[i])
+    
+    # Handle binary classification outputs (Low/High)
+    if ("Low" %in% colnames(vi) & "High" %in% colnames(vi)) {
+      vi <- vi %>%
+        mutate(Importance = pmax(Low, High)) %>%
+        select(Variable, Importance, Model)
+    } else {
+      vi <- vi %>%
+        rename(Importance = Overall) %>%
+        select(Variable, Importance, Model)
+    }
+    
+    # Scale within model to [0,100]
+    vi <- vi %>%
+      mutate(Importance = 100 * Importance / max(Importance, na.rm = TRUE))
+    
+    return(vi)
+  })
+  
+  varimp_df <- bind_rows(varimps)
+}
+
 ```
 
 ## Logistic Regression
@@ -703,7 +740,7 @@ ggplot(log_coef, aes(x = reorder(term, OddsRatio),
                      fill = OddsRatio)) +
   geom_col(alpha = 0.9) +
   coord_flip() +
-  scale_fill_distiller(palette = "Dark2", direction = 1) +
+  scale_fill_gradient(low = "#1b9e77", high = "#d95f02") +
   theme_minimal(base_size = 12) +
   labs(title = "Logistic Regression Coefficients (Odds Ratios)",
        x = "Variable",
@@ -715,11 +752,14 @@ log_preds <- predict(log_model, test_final)
 log_probs <- predict(log_model, test_final, type = "prob")[, "High"] # for ROC curve
 roc_log <- roc(true_labels, log_probs)
 
+# ROC dataframe
+roc_log <- roc_to_df(roc_log, "Logistic Regression")
+
 # Construct the confusion matrix
 log_cm <- caret::confusionMatrix(log_preds, test_final$traffic)
 
 # Plotting the confusion matrix
-plot_log <- plot_cm(log_cm, title = "Logistic Regression - Confusion Matrix")
+plot_log <- plot_cm(log_cm, "Logistic Regression")
 
 # Logistic regression model results
 log_results <- get_metrics(log_cm, roc_log$auc, "Logistic Regression")
@@ -753,14 +793,17 @@ dt_preds <- predict(dt_model, test_final)
 dt_probs <- predict(dt_model, test_final, type = "prob")[, "High"] # for ROC curve
 roc_dt <- roc(true_labels, dt_probs)
 
+# ROC dataframe
+roc_dt <- roc_to_df(roc_dt, "Decision Tree")
+
 # Construct the confusion matrix
 dt_cm <- caret::confusionMatrix(dt_preds, test_final$traffic)
 
 # Plotting the confusion matrix
-plot_dt <- plot_cm(dt_cm, title = "Decision Tree - Confusion Matrix")
+plot_dt <- plot_cm(dt_cm, "Decision Tree")
 
 # Logistic regression model results
-dt_results <- get_metrics(dt_cm, roc_dt, "Decision Tree")
+dt_results <- get_metrics(dt_cm, roc_dt$auc, "Decision Tree")
 
 # Print the results
 kable(dt_results, caption = "Decision Tree Model Results") %>%
@@ -786,19 +829,32 @@ rf_model <- train(traffic ~ ., data = train_final,
                     number = 5),
                   importance = TRUE)
 
+# Plot with full customization
+tree_rpart <- rpart(traffic ~ ., data = train_final, method = "class")
+
+rpart.plot(tree_rpart, type = 3, 
+           extra = 104, fallen.leaves = TRUE,
+           cex = 1, box.col = c("lightgreen", "orange"),
+           border.col = "black", shadow.col = "gray",
+           under = TRUE, branch.lty = 1,
+           main = "Random Forest - Example Tree")
+
 # Predict the target variable using the test data
 rf_preds <- predict(rf_model, test_final)
 rf_probs <- predict(rf_model, test_final, type = "prob")[, "High"] # for ROC curve
 roc_rf <- roc(true_labels, rf_probs)
 
+# ROC dataframe
+roc_rf <- roc_to_df(roc_rf, "Random Forest")
+
 # Construct the confusion matrix
 rf_cm <- caret::confusionMatrix(rf_preds, test_final$traffic)
 
 # Plotting the confusion matrix
-plot_rf <- plot_cm(rf_cm, title = "Random Forest - Confusion Matrix")
+plot_rf <- plot_cm(rf_cm, "Random Forest")
 
 # Logistic regression model results
-rf_results <- get_metrics(rf_cm, roc_rf, "Random Forest")
+rf_results <- get_metrics(rf_cm, roc_rf$auc, "Random Forest")
 
 # Print the results
 kable(rf_results, caption = "Random Forest Model Results") %>%
@@ -812,30 +868,34 @@ kable(rf_results, caption = "Random Forest Model Results") %>%
 ```{r xgb model, message = FALSE, warning = FALSE}
 
 # Building the logistic regression model
-xgb_model <- train(traffic ~ ., data = train_final,
-                  method = 'xgbTree', 
-                  trControl = trainControl(
-                    method = 'cv',
-                    number = 5,
-                    verboseIter = TRUE),
-                  tuneLength = 1)
+xgb_model <- train(traffic ~ ., data = train_final, method = "xgbTree",
+                   trControl = trainControl(method = "cv", number = 5),
+                   tuneGrid = expand.grid(
+                     nrounds = 50, max_depth = 3,
+                     eta = 0.1, gamma = 0,
+                     colsample_bytree = 1, min_child_weight = 1, subsample = 1)
+)
 
 # Plot the tree
-xgb.plot.tree(model = xgb_model$finalModel, trees = 10)
+xgb.plot.tree(model = xgb_model$finalModel, trees = 3,
+              show_node_id = TRUE, render = TRUE)
 
 # Predict the target variable using the test data
 xgb_preds <- predict(xgb_model, test_final)
 xgb_probs <- predict(xgb_model, test_final, type = "prob")[, "High"] # for ROC curve
 roc_xgb <- roc(true_labels, xgb_probs)
 
+# ROC dataframe
+roc_xgb <- roc_to_df(roc_xgb, "XGB Boost")
+
 # Construct the confusion matrix
 xgb_cm <- caret::confusionMatrix(xgb_preds, test_final$traffic)
 
 # Plotting the confusion matrix
-plot_xgb <- plot_cm(xgb_cm, title = "XGB Boost - Confusion Matrix")
+plot_xgb <- plot_cm(xgb_cm, "XGB Boost")
 
 # Logistic regression model results
-xgb_results <- get_metrics(xgb_cm, roc_xgb, "XGB Boost")
+xgb_results <- get_metrics(xgb_cm, roc_xgb$auc, "XGB Boost")
 
 # Print the results
 kable(xgb_results, caption = "XGB Boost Model Results") %>%
@@ -859,7 +919,6 @@ Insight: The evaluation framework allows identification of the most reliable mod
 
 # Combine ROC curves and threshold points from multiple models
 all_roc_df <- bind_rows(roc_log$roc_df, roc_dt$roc_df, roc_rf$roc_df, roc_xgb$roc_df)
-
 all_point_df <- bind_rows(roc_log$point_df, roc_dt$point_df, roc_rf$point_df, roc_xgb$point_df)
 
 # Add label column for unified legend
@@ -871,8 +930,8 @@ all_point_df <- all_point_df %>%
 
 # Plot
 ggplot(all_roc_df, aes(x = FPR, y = TPR, color = Label)) +
-  geom_line(size = 1.2) +
-  geom_point(data = all_point_df, aes(x = FPR, y = TPR, color = Label), size = 4) +
+  geom_line(size = 1) +
+  geom_point(data = all_point_df, aes(x = FPR, y = TPR, color = Label), size = 3) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray") +
   facet_wrap(~Model) +
   scale_color_brewer(palette = "Dark2") +
@@ -886,12 +945,12 @@ ggplot(all_roc_df, aes(x = FPR, y = TPR, color = Label)) +
   theme(
     legend.position = "bottom",
     legend.box = "horizontal",
-    legend.title = element_text(size = 11),
-    legend.text = element_text(size = 10),
+    legend.title = element_text(size = 8),
+    legend.text = element_text(size = 8),
     legend.key.width = unit(1.2, "cm"),
     legend.spacing.x = unit(0.6, "cm"),
-    axis.text = element_text(size = 10),
-    axis.title = element_text(size = 12)
+    axis.text = element_text(size = 8),
+    axis.title = element_text(size = 8)
   ) +
   guides(color = guide_legend(nrow = 2, byrow = TRUE))
 
@@ -910,17 +969,17 @@ all_cm <- all_cm %>%
     Reference = factor(Reference, levels = levels_order)
   ) %>%
   mutate(Label = case_when(
-    Prediction == "High" & Reference == "High" ~ "TP",
-    Prediction == "High" & Reference == "Low"  ~ "FP",
-    Prediction == "Low"  & Reference == "Low"  ~ "TN",
-    Prediction == "Low"  & Reference == "High" ~ "FN",
+    Prediction == "High" & Reference == "High" ~ "True Positive (TP)",
+    Prediction == "High" & Reference == "Low"  ~ "False Positive (FP)",
+    Prediction == "Low"  & Reference == "Low"  ~ "True Negative (TN)",
+    Prediction == "Low"  & Reference == "High" ~ "False Negative (FN)",
     TRUE ~ ""
   ))
 
 # Plot confusion matrices with labels
 ggplot(all_cm, aes(x = Reference, y = Prediction, fill = Frequency)) +
   geom_tile(color = "white") +
-  geom_text(aes(label = paste0(Frequency, "\n", Label)), color = "black", size = 5) +
+  geom_text(aes(label = paste0(Frequency, "\n", Label)), color = "black", size = 3) +
   scale_fill_viridis_c(option = "D") +  # shared color scale
   theme_minimal() +
   facet_wrap(~Model, ncol = 2, scales = "fixed") +  # fixed axes
@@ -948,41 +1007,40 @@ kable(model_results, caption = "Model Results") %>%
 
 ```{r var imp plot, warning = FALSE, message = FALSE}
 
-# If using glmnet or sparse matrix coefficients
-log_coef <- coef(log_model$finalModel, s = log_model$bestTune$lambda)
+varimp_df <- plot_all_varimp(
+  models = list(log_model, rf_model, xgb_model, dt_model),
+  model_names = c("Logistic Regression", "Random Forest", "XGBoost", "Decision Tree")
+)
 
-# Prepare the log reg importance
-log_varimp <- data.frame(
-  Variable = rownames(log_coef),
-  Importance = abs(as.numeric(log_coef))
-) %>% filter(Variable != "(Intercept)")
-log_varimp$Model <- "Logistic Regression"
-
-# Random Forest variable Importancec
-rf_varimp <- varImp(rf_model)$importance
-rf_varimp$Variable <- rownames(rf_varimp)
-rf_varimp <- rf_varimp %>% 
-  select(Variable, Importance = High)
-rf_varimp$Model <- "Random Forest"
-
-# combine the two 
-model_varimp <- bind_rows(log_varimp, rf_varimp)
-model_varimp <- model_varimp %>%
-  group_by(Model) %>%
-  mutate(ScaledImportance = 100 * Importance/ max(Importance)) %>%
-  ungroup()
-
-# plot the var imp
-ggplot(model_varimp, 
-       aes(x = reorder(Variable, ScaledImportance),
-           y = ScaledImportance, fill = Model)) +
-  geom_bar(stat = "identity", position = "dodge", alpha = 0.8) +
-  scale_fill_brewer(palette = "Dark2") +
+# Apply the variable importance function
+ggplot(varimp_df, aes(x = reorder(Variable, Importance),
+                      y = Importance,
+                      fill = Model)) +
+  geom_col(position = position_dodge(width = 0.9), 
+           width = 0.7, alpha = 0.9) +
   coord_flip() +
-  labs(title ="Variable Importance: Logistice Regression vs Random Forest",
-       x = "Variables",
-       y = "Scaled Importance") +
-  theme_minimal()
+  
+  # Add spacing between variables
+  scale_x_discrete(expand = expansion(mult = c(0.05, 0.05))) +
+  
+  # Color palette (color-blind safe)
+  scale_fill_brewer(palette = "Dark2") +
+  
+  # Styling
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.y  = element_text(size = 10, hjust = 1),
+    axis.text.x  = element_text(size = 10),
+    axis.title   = element_text(size = 12, face = "bold"),
+    legend.title = element_text(size = 11),
+    legend.text  = element_text(size = 10),
+    panel.grid.major.y = element_blank(),  # removes y gridlines between bars
+    plot.title   = element_text(size = 16, face = "bold", hjust = 0.5)
+  ) +
+  
+  labs(title = "Scaled Variable Importance Across Models",
+       x = "Variable",
+       y = "Scaled Importance (0–100)")
 
 ```
 
