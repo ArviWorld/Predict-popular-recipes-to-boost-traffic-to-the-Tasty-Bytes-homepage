@@ -615,46 +615,42 @@ Model Metrics Dataframe – A consolidated table of performance metrics (Accurac
 true_labels <- test_final$traffic
 
 # Function to plot ROC with AUC and highlighted threshold point
-plot_roc <- function(roc_obj,
-                     model_name = "Model",
-                     col_line = "steelblue") {
-  # True labels
-  true_labels <- test_final$traffic
-  
+oc_to_df <- function(roc_obj, model_name = "Model") {
+  # Full ROC curve
+  roc_df <- data.frame(
+    FPR = 1 - roc_obj$specificities,
+    TPR = roc_obj$sensitivities,
+    Model = model_name)
+  # Best threshold using Youden's index
+  opt <- coords(roc_obj, "best", 
+    ret = c("specificity", "sensitivity"), 
+    best.method = "youden")
+  opt <- as.numeric(opt)  # ensure numeric
+  # Threshold point dataframe with correct column names
+  point_df <- data.frame(
+    FPR = 1 - opt[1],  # 1 - specificity
+    TPR = opt[2],      # sensitivity
+    Model = model_name)
   # Compute AUC
-  model_auc <- auc(roc_obj)
-  # Plot ROC curve
-  plot.roc(roc_obj, col = col_line, lwd = 2,
-           main = paste("ROC Curve -", model_name),
-           xlab = "False Positive Rate (1 - Specificity)",
-           ylab = "True Positive Rate (Sensitivity)")
-  # Add AUC to legend
-  legend("bottomright", legend = paste("AUC =", round(model_auc, 3)),col = col_line, lwd = 2)
-  
+  auc_val <- as.numeric(auc(roc_obj))
+  # Return all
+  return(list(
+    roc_df = roc_df,
+    point_df = point_df,
+    auc = auc_val
+  ))
 }
 
 # Functions to plot confusion matrix
-plot_cm <- function(cm, title = "Confusion Matrix") {
-  cm_df <- as.data.frame(cm$table)
-  colnames(cm_df) <- c("Prediction", "Reference", "Frequency")
-  # Add TP, TN, FP, FN labels
-  cm_df$Label <- ""
-  cm_df$Label[cm_df$Prediction == "High" & cm_df$Reference == "High"] <- "True Positive (TP)"
-  cm_df$Label[cm_df$Prediction == "High" & cm_df$Reference == "Low"]  <- "False Postive (FP)"
-  cm_df$Label[cm_df$Prediction == "Low"  & cm_df$Reference == "Low"]  <- "True Negative (TN)"
-  cm_df$Label[cm_df$Prediction == "Low"  & cm_df$Reference == "High"] <- "False Negative (FN)"
-  
-  # plot the confusion matrix
-  ggplot(cm_df, aes(x = Reference, y = Prediction, fill = Frequency)) +
-    geom_tile(aes(fill = Frequency), color = "white", alpha = 0.9) +
-    scale_fill_viridis_c(option = "D") +
-    geom_text(aes(label = paste0(Frequency, "\n", Label)), color = "black", size = 4) +
-    theme_minimal() +
-    ggtitle(title)
-}
+plot_cm <- function(cm, model_name) {
+    cm_df <- as.data.frame(cm$table)
+    colnames(cm_df) <- c("Prediction", "Reference", "Frequency")
+    cm_df$Model <- model_name
+    return(cm_df)
+  }
 
 # Function to get metrics for the model
-get_metrics <- function(cm, roc_obj, model_name = "Model"){
+get_metrics <- function(cm, auc_val, model_name = "Model"){
   accuracy <- as.numeric(cm$overall["Accuracy"])
   sensitivity <- as.numeric(cm$byClass["Sensitivity"])
   specificity <- as.numeric(cm$byClass["Specificity"])
@@ -664,10 +660,6 @@ get_metrics <- function(cm, roc_obj, model_name = "Model"){
   } else {
     f1 <- NA
   }
-  
-  # Get ROC-AUC from the ROC object
-  roc_auc <- auc(roc_obj)
-  
   # Return as a dataframe
   df <- data.frame(
     Model = model_name,
@@ -676,7 +668,7 @@ get_metrics <- function(cm, roc_obj, model_name = "Model"){
     Recall = sensitivity,
     Specificity = specificity,
     F1_score = f1,
-    ROC_AUC = as.numeric(roc_auc))
+    ROC_AUC = as.numeric(auc_val))
   
   return(df)
 }
@@ -700,26 +692,37 @@ log_model <- train(traffic ~ . + 0, data = train_final,
                    trControl = trainControl(method = 'cv',
                               number = 5))
 
+# Extract coefficients and odds ratios
+log_coef <- broom::tidy(log_model$finalModel) %>%
+  mutate(OddsRatio = exp(estimate)) %>%
+  filter(term != "(Intercept)")
+
+# Plot with Dark2 colors, filled by odds ratio value
+ggplot(log_coef, aes(x = reorder(term, OddsRatio),
+                     y = OddsRatio,
+                     fill = OddsRatio)) +
+  geom_col(alpha = 0.9) +
+  coord_flip() +
+  scale_fill_distiller(palette = "Dark2", direction = 1) +
+  theme_minimal(base_size = 12) +
+  labs(title = "Logistic Regression Coefficients (Odds Ratios)",
+       x = "Variable",
+       y = "Odds Ratio (exp(coef))",
+       fill = "Odds Ratio")
+
 # Predict the target variable using the test data
 log_preds <- predict(log_model, test_final)
 log_probs <- predict(log_model, test_final, type = "prob")[, "High"] # for ROC curve
 roc_log <- roc(true_labels, log_probs)
 
-# AUC and ROC Curve
-plot_roc(roc_log, model_name = "Logistic Regression", col_line = "blue")
-
-# Variable importance
-plot(varImp(log_model, scale = TRUE, 
-            top = 15, main = "Logistic Regression Variable Importance"))
-
 # Construct the confusion matrix
 log_cm <- caret::confusionMatrix(log_preds, test_final$traffic)
 
 # Plotting the confusion matrix
-plot_cm(log_cm, title = "Logistic Regression - Confusion Matrix")
+plot_log <- plot_cm(log_cm, title = "Logistic Regression - Confusion Matrix")
 
 # Logistic regression model results
-log_results <- get_metrics(log_cm, roc_log, "Logistic Regression")
+log_results <- get_metrics(log_cm, roc_log$auc, "Logistic Regression")
 
 # Print the results
 kable(log_results, caption = "Logistic Regression Model Results") %>%
@@ -741,26 +744,20 @@ dt_model <- train(traffic ~ .,
                   tuneLength = 10)
 
 # Plot the tree
-rpart.plot(dt_model$finalModel)
+rpart.plot(dt_model$finalModel, type = 3, 
+           extra = 104, under = TRUE, tweak = 1.2, 
+           fallen.leaves = TRUE, main = "Decision Tree")
 
 # Predict the target variable using the test data
 dt_preds <- predict(dt_model, test_final)
 dt_probs <- predict(dt_model, test_final, type = "prob")[, "High"] # for ROC curve
 roc_dt <- roc(true_labels, dt_probs)
 
-
-# AUC and ROC Curve
-plot_roc(roc_dt, model_name = "Decision Tree", col_line = "orange")
-
-# Variable importance
-plot(varImp(dt_model, scale = TRUE, 
-            top = 15, main = "Decision Tree Variable Importance"))
-
 # Construct the confusion matrix
 dt_cm <- caret::confusionMatrix(dt_preds, test_final$traffic)
 
 # Plotting the confusion matrix
-plot_cm(dt_cm, title = "Decision Tree - Confusion Matrix")
+plot_dt <- plot_cm(dt_cm, title = "Decision Tree - Confusion Matrix")
 
 # Logistic regression model results
 dt_results <- get_metrics(dt_cm, roc_dt, "Decision Tree")
@@ -789,26 +786,16 @@ rf_model <- train(traffic ~ ., data = train_final,
                     number = 5),
                   importance = TRUE)
 
-# Plot the tree
-varImpPlot(rf_model$finalModel)
-
 # Predict the target variable using the test data
 rf_preds <- predict(rf_model, test_final)
 rf_probs <- predict(rf_model, test_final, type = "prob")[, "High"] # for ROC curve
 roc_rf <- roc(true_labels, rf_probs)
 
-# AUC and ROC Curve
-plot_roc(roc_rf, model_name = "Random Forest", col_line = "orange")
-
-# Variable importance
-plot(varImp(rf_model, scale = TRUE, 
-            top = 15, main = "Random Forest Variable Importance"))
-
 # Construct the confusion matrix
 rf_cm <- caret::confusionMatrix(rf_preds, test_final$traffic)
 
 # Plotting the confusion matrix
-plot_cm(rf_cm, title = "Random Forest - Confusion Matrix")
+plot_rf <- plot_cm(rf_cm, title = "Random Forest - Confusion Matrix")
 
 # Logistic regression model results
 rf_results <- get_metrics(rf_cm, roc_rf, "Random Forest")
@@ -841,18 +828,11 @@ xgb_preds <- predict(xgb_model, test_final)
 xgb_probs <- predict(xgb_model, test_final, type = "prob")[, "High"] # for ROC curve
 roc_xgb <- roc(true_labels, xgb_probs)
 
-# AUC and ROC Curve
-plot_roc(roc_xgb, model_name = "XGB Boost", col_line = "orange")
-
-# Variable importance
-plot(varImp(xgb_model, scale = TRUE, 
-            top = 15, main = "XGB Boost Variable Importance"))
-
 # Construct the confusion matrix
 xgb_cm <- caret::confusionMatrix(xgb_preds, test_final$traffic)
 
 # Plotting the confusion matrix
-plot_cm(xgb_cm, title = "XGB Boost - Confusion Matrix")
+plot_xgb <- plot_cm(xgb_cm, title = "XGB Boost - Confusion Matrix")
 
 # Logistic regression model results
 xgb_results <- get_metrics(xgb_cm, roc_xgb, "XGB Boost")
@@ -875,6 +855,79 @@ ROC-AUC analysis validated the trade-offs in model sensitivity and specificity.
 
 Insight: The evaluation framework allows identification of the most reliable model, balancing predictive accuracy with interpretability, ensuring editors can trust recommendations when selecting homepage recipes.
 
+```{r ROC results, warning = FALSE. message = FALSE}
+
+# Combine ROC curves and threshold points from multiple models
+all_roc_df <- bind_rows(roc_log$roc_df, roc_dt$roc_df, roc_rf$roc_df, roc_xgb$roc_df)
+
+all_point_df <- bind_rows(roc_log$point_df, roc_dt$point_df, roc_rf$point_df, roc_xgb$point_df)
+
+# Add label column for unified legend
+all_roc_df <- all_roc_df %>%
+  mutate(Label = paste0(Model, " (AUC=", round(AUC, 3), ")"))
+
+all_point_df <- all_point_df %>%
+  left_join(all_roc_df %>% distinct(Model, Label), by = "Model")
+
+# Plot
+ggplot(all_roc_df, aes(x = FPR, y = TPR, color = Label)) +
+  geom_line(size = 1.2) +
+  geom_point(data = all_point_df, aes(x = FPR, y = TPR, color = Label), size = 4) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray") +
+  facet_wrap(~Model) +
+  scale_color_brewer(palette = "Dark2") +
+  theme_minimal() +
+  labs(
+    title = "ROC Curves Across Models",
+    x = "False Positive Rate (1 - Specificity)",
+    y = "True Positive Rate (Sensitivity)",
+    color = "Model (AUC)"
+  ) +
+  theme(
+    legend.position = "bottom",
+    legend.box = "horizontal",
+    legend.title = element_text(size = 11),
+    legend.text = element_text(size = 10),
+    legend.key.width = unit(1.2, "cm"),
+    legend.spacing.x = unit(0.6, "cm"),
+    axis.text = element_text(size = 10),
+    axis.title = element_text(size = 12)
+  ) +
+  guides(color = guide_legend(nrow = 2, byrow = TRUE))
+
+```
+
+``` {r confusion mattrix, warning = FALSE, message = FALSE}
+
+# Combine all confusion matrices
+all_cm <- bind_rows(plot_log, plot_dt, plot_rf, plot_xgb)
+
+# Optional: convert Prediction & Reference to factors with consistent levels
+levels_order <- c("Low", "High")
+all_cm <- all_cm %>%
+  mutate(
+    Prediction = factor(Prediction, levels = levels_order),
+    Reference = factor(Reference, levels = levels_order)
+  ) %>%
+  mutate(Label = case_when(
+    Prediction == "High" & Reference == "High" ~ "TP",
+    Prediction == "High" & Reference == "Low"  ~ "FP",
+    Prediction == "Low"  & Reference == "Low"  ~ "TN",
+    Prediction == "Low"  & Reference == "High" ~ "FN",
+    TRUE ~ ""
+  ))
+
+# Plot confusion matrices with labels
+ggplot(all_cm, aes(x = Reference, y = Prediction, fill = Frequency)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = paste0(Frequency, "\n", Label)), color = "black", size = 5) +
+  scale_fill_viridis_c(option = "D") +  # shared color scale
+  theme_minimal() +
+  facet_wrap(~Model, ncol = 2, scales = "fixed") +  # fixed axes
+  labs(title = "Confusion Matrices Across Models", fill = "Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
 
 ```{r model results, warning = FALSE, message = FALSE}
 
@@ -937,20 +990,7 @@ Feature Importance / Predictive Insights
 Feature Importance Bar Plot
 Partial Dependence Plot
 
-Optional Advanced Visualizations
-PCA / t-SNE Plot
-```{r PCA / t-SNE plot}
 
-# PCA
-pca_res <- prcomp(train_final[, -which(names(train_final) == "traffic")], scale. = TRUE)
-autoplot(pca_res, data = train_final, colour = 'traffic') +
-  labs(title = "PCA of Recipes")
-
-```
-
-
-Radar / Spider Chart
-Heatmap of Traffic by Category and Servings
 
 
 
