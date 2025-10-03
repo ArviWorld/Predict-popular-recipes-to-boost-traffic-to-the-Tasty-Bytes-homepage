@@ -499,8 +499,8 @@ kable(summary(recipe_clean), caption = "Descriptive Statistics of Cleaned Recipe
 
 ```
 
--   **RecipeID:** RecipeID represents the continuous unique identifier
-    for each recipe and is dropped from the cleaned dataset.
+-   ***RecipeID:*** `RecipeID` represents the continuous unique
+    identifier for each recipe and is dropped from the cleaned dataset.
 -   ***Servings:*** Values range between 1 and 6, which is plausible and
     consistent with typical recipe sizes. No negative or implausible
     serving values were observed after cleaning.
@@ -522,12 +522,7 @@ kable(summary(recipe_clean), caption = "Descriptive Statistics of Cleaned Recipe
     vs. 373 `Low` (40%), indicating a moderate class imbalance but no
     anomalies.
 
-**Insight:** Nutrient ranges are consistent with expectations of food
-categories (e.g., pork and meat dishes being protein-dense, desserts
-being sugar-dense). This variability is important for distinguishing
-recipe types and traffic outcomes in modeling.
-
-**EDA Outcomes and Insights - Summary**
+#### **EDA Outcomes and Insights - Summary**
 
 -   The recipe dataset is well-structured with a clear distinction
     between predictors (nutrients, category, servings) and outcome
@@ -535,13 +530,14 @@ recipe types and traffic outcomes in modeling.
 -   Missing data was systematic and imputations ensured proportionality
     between nutrients and servings while respecting category norms.
 -   Nutrient ranges align with expected category patterns (e.g.,
-    desserts sugar-dense, meat dishes protein-rich). Outliers reflect
-    natural variation across recipe types and add useful variance, not
-    noise.
--   Outliers are informative, not errors, and should be preserved for
-    modeling as they contribute to recipe diversity.
--   Nutrient profiles by category provide meaningful differentiation
-    aligned with real-world recipe expectations.
+    desserts sugar-dense, meat dishes protein-rich). This variability is
+    important for distinguishing recipe types and traffic outcomes in
+    modeling. Nutrient profiles by category provide meaningful
+    differentiation aligned with real-world recipe expectations.
+-   Outliers reflect natural variation across recipe types and add
+    useful variance, not noise. Outliers are informative, not errors,
+    and should be preserved for modeling as they contribute to recipe
+    diversity.
 -   The target variable (`traffic`) shows a slight imbalance (60% High
     and 40% Low), but not extreme, making it suitable for standard
     classification approaches.
@@ -569,13 +565,12 @@ required before modeling.
 
 **Histograms / Density Plots**
 
--   Histograms and density plots were created for each nutrient variable
-    to examine their distributions.
--   These plots reveal whether nutrient values are normally distributed
-    or skewed, and highlight categories of recipes with extreme nutrient
-    values.
--   Identifying these patterns is useful in detecting the need for
-    normalization and ensuring balanced model performance.
+Histograms and density plots were created for each nutrient variable to
+examine their distributions. These plots reveal whether nutrient values
+are normally distributed or skewed, and highlight categories of recipes
+with extreme nutrient values. Identifying these patterns is useful in
+detecting the need for normalization and ensuring balanced model
+performance.
 
 ```{r recipe distribution, warning = FALSE, message = FALSE}
 
@@ -599,20 +594,22 @@ histogram
 
 **Insights**
 
-Histogram distribution shows right skewed tailed, which means that there
-are lot of higher values. Hence, log scale transformation is required
-and shows almost normal distribution for all nutrient composition. It
-seems like there are outliers in each nutrient components but each
-outlier is representable for the analysis as each recipe has its own
-nutrient composition.
+-   Histograms reveal that nutrient variables are highly right-skewed,
+    indicating a higher prevalence of recipes with larger nutrient
+    values.
+
+-   Log transformation of these variables normalizes the distribution,
+    making them suitable for modeling.
+
+-   While outliers exist in each nutrient, they are valid and reflective
+    of the natural variability in recipe compositions.
 
 #### **Traffic Insights**
 
-Visualizations reveal how recipe categories influence homepage traffic.
-Vegetable recipes attract the highest proportion of high traffic, while
-beverages are more associated with low traffic. These patterns provide
-an initial understanding of user preferences before diving into
-model-based feature importance.
+Traffic analysis provides a perspective on recipe popularity and
+visibility on the Tasty Bytes platform. Understanding which recipe
+categories and serving sizes attract high or low traffic can inform
+content strategy.
 
 **Bar Plot / Count Plot**
 
@@ -653,15 +650,18 @@ bar_traffic_ser
 
 **Insights**
 
--   Vegetable, Potato & Pork are the top three recipe category having
-    highest count of high traffic when displayed on the webpage
--   Beverages, Breakfast & Chicken Breast have the high counts of Low
-    traffic among the recipe category.
--   All the servings have a more high traffic than the low, 4 & 6
-    serving dishes have scored more. 3 serving is cause of the
-    imputation strategy to fill in the missing value.
+-   **Category-wise Traffic:**
+    -   High traffic: Vegetable, Potato, and Pork recipes are the most
+        viewed.
 
-#### **Histogram of Traffic vs. Nutrient Composition**
+    -   Low traffic: Beverages, Breakfast, and Chicken Breast recipes
+        have higher counts in the low-traffic segment.
+-   **Serving Size Trends:**
+    -   Recipes with 4 and 6 servings generally attract higher traffic.
+
+    -   One 3-serving dish reflect imputation to address missing data.
+
+**Histogram of Traffic vs. Nutrient Composition**
 
 Histograms of nutrients split by traffic levels were generated. These
 plots help reveal whether nutrient intensity (e.g., high-calorie or
@@ -688,16 +688,16 @@ bar_nutrient
 
 **Insights**
 
--   All the nutrients as highly right skewed same as the histogram
-    before and is log transformed, but differentiated bu the high and
-    low traffic in this graph.
+-   After log transformation, nutrient distributions differentiate
+    between high- and low-traffic recipes.
 
--   High traffic is more than the low traffic in all of the nutrient
-    composition.
+-   High-traffic recipes consistently outnumber low-traffic recipes
+    across all nutrient variables, suggesting a general preference for
+    nutrient-rich recipes.
 
 **Heatmap of Traffic by Category and Servings**
 
-A two-dimensional heatmap was created to show how recipe categories and
+A two-dimensional heatmap was created to show how recipe categories vs
 serving sizes jointly influence traffic outcomes. This allows us to
 visually capture interactions, such as whether larger servings in
 certain categories are more likely to attract high traffic.
@@ -723,29 +723,30 @@ hm_traffic_ser
 
 **Insights**
 
--   4 servings scored the most in both High and low traffic,
--   Vegetable, Potatoes and Pork have scored high traffic mainly in the
-    4 servings recipe
--   Breakfast, Beverages and chicken breast have scored high in the low
-    traffic in the 4 servings recipe.
+-   4-serving recipes consistently show the highest traffic in both
+    high- and low-traffic segments.
+-   High traffic is dominated by Vegetable, Potato, and Pork recipes at
+    4 servings.
+-   Low traffic is mainly observed in Breakfast, Beverages, and Chicken
+    Breast recipes at 4 servings.
 
 #### **Feature Relationships**
 
-Exploratory plots highlight how nutritional attributes (calories,
-carbohydrate, sugar, protein) and servings vary across categories and
-traffic outcomes. These relationships help identify potential drivers of
-visibility, supporting model selection and interpretation of variable
-importance.
+Exploring relationships among nutrient variables and servings across
+categories can uncover potential drivers of recipe visibility. These
+insights inform feature selection for predictive modeling. Nutrient
+variables (calories, carbohydrates, sugar, protein) and servings vary
+across categories and traffic outcomes, highlighting their potential
+influence on traffic. Understanding these relationships supports
+interpretation of model outputs and feature importance ranking.
 
 **Correlation Heatmap**
 
--   A correlation heatmap was generated for the nutrient variables.
--   This visualization helps identify multicollinearity (e.g., strong
-    correlation between calories and carbohydrates) and provides insight
-    into which features contribute unique information for
-    classification.
--   Understanding correlations supports feature selection and reduces
-    redundancy in the predictive model.
+A correlation heatmap was generated for the nutrient variables. This
+visualization helps identify multicollinearity between numeric variables
+and provides insight into which features contribute unique information
+for classification. Understanding correlations supports feature
+selection and reduces redundancy in the predictive model.
 
 ```{r feature relationhship, warning = FALSE, message = FALSE}
 
@@ -764,8 +765,11 @@ corrplot(cor_matrix, method = "circle", type = "upper",
 
 **Insights**
 
-Correlation plot indicates that there are no direct realationship within
-the numeric variables in the cleaned dataset.
+-   The correlation heatmap shows no strong linear relationships among
+    numeric variables in the cleaned dataset.
+
+-   This suggests that each nutrient variable provides unique
+    information for predicting traffic.
 
 # Machine Learning Models
 
@@ -856,9 +860,8 @@ the crop type.
 
 To ensure consistent evaluation, reusable functions were developed for:
 
--   **Confusion Matrix:** To summarize correct vs. incorrect predictions
-    across Low/High traffic.
--   
+**Confusion Matrix:** To summarize correct vs. incorrect predictions
+across Low/High traffic.
 
 ```{r model eval cm, warning = FALSE, message = TRUE}
 
@@ -872,9 +875,9 @@ plot_cm <- function(cm, model_name) {
 
 ```
 
--   **Model Metrics Dataframe:** A consolidated table of performance
-    metrics (Accuracy, Precision, Recall, F1-score, ROC-AUC) for each
-    model, enabling easy comparison.
+**Model Metrics Dataframe:** A consolidated table of performance metrics
+(Accuracy, Precision, Recall, F1-score, ROC-AUC) for each model,
+enabling easy comparison.
 
 ```{r model eval metrics, warning = FALSE, message = TRUE}
 
@@ -904,7 +907,7 @@ get_metrics <- function(cm, auc_val, model_name = "Model"){
 
 ```
 
--   **Variable Importance plots:**
+**Variable Importance plots:**
 
 ```{r model eval varimp, warning = FALSE, message = TRUE}
 # Function to plot variabe importance for models
@@ -935,8 +938,8 @@ plot_all_varimp <- function(models, model_names) {
 
 ```
 
--   **ROC-AUC Plots:** To visualize trade-offs between sensitivity and
-    specificity and compute the area under the curve (AUC).
+**ROC-AUC Plots:** To visualize trade-offs between sensitivity and
+specificity and compute the area under the curve (AUC).
 
 ```{r model eval ROC-AUC, warning = FALSE, message = TRUE}
 
@@ -1034,7 +1037,34 @@ roc_log <- roc_to_df(roc_log, "Logistic Regression")
 
 ```
 
+**Insights**
+
+-   Logistic Regression model is kept as the baseline model, which
+    scores an
+    -   Accuracy = 72.8%; Precision = 67%
+    -   Recall = 60%; Specificity = 80%
+    -   F1 score = 63.5%; ROC_AUC score = 80%
+-   Logistic Regression Coefficient plot which measures the Odds Ratio
+    of predicting High and low traffic based on the variables. From this
+    plot,
+    -   Vegetables, Potato & Pork recipes are scored with very high
+        coeffs indicating that the high traffic is favoured in these
+        recipe category
+    -   Beverages, Breakfast and Chicken & Chicken breast scored very
+        low coeffs which indicates that they get very low traffic when
+        featured on the website.
+    -   Nutrient compositions and servings have scored positive and more
+        than the low traffic recipe categories but they do not influence
+        much on the traffic to the webpage.
+    -   This relates to the Data visualization results from the previous
+        sessions
+
 ## Decision Tree
+
+The Decision Tree model identifies key recipe features—like category,
+servings, and nutritional content—that influence user traffic. Its
+simple, visual structure helps understand which attributes drive recipe
+popularity on Tasty Bytes.
 
 ```{r decision tree model, message = FALSE, warning = FALSE}
 
@@ -1073,16 +1103,20 @@ roc_dt <- roc_to_df(roc_dt, "Decision Tree")
 
 ```
 
-## Random Forest
+**Insights**
+
+-   Decision Tree model scores,
+    -   Accuracy = 71.8%; Precision = 70%
+    -   Recall = 49%; Specificity = 86%
+    -   F1 score = 57.5%; ROC_AUC score = 68.5%
+
+##  Random Forest
 
 Random Forest was implemented to capture non-linear relationships
-between features and recipe traffic.
-
-Feature importance scores were extracted to highlight which nutrients or
-attributes most strongly influence traffic.
-
-This approach improves prediction accuracy while providing
-interpretability regarding key drivers of engagement.
+between features and recipe traffic. Feature importance scores were
+extracted to highlight which nutrients or attributes most strongly
+influence traffic. This approach improves prediction accuracy while
+providing interpretability regarding key drivers of engagement.
 
 ```{r rf model, message = FALSE, warning = FALSE}
 
@@ -1127,7 +1161,19 @@ roc_rf <- roc_to_df(roc_rf, "Random Forest")
 
 ```
 
+**Insights**
+
+-   Random Forest model scores,
+    -   Accuracy = 72.7%; Precision = 70%
+    -   Recall = 53%; Specificity = 85.4%
+    -   F1 score = 60.5%; ROC_AUC score = 77.5%
+
 ## XGB Boost
+
+XGBoost is a powerful ensemble model that captures complex interactions
+between recipe features to accurately predict high-traffic recipes. It
+helps optimize homepage selection by highlighting recipes most likely to
+engage users.
 
 ```{r xgb model, message = FALSE, warning = FALSE}
 
@@ -1167,15 +1213,21 @@ roc_xgb <- roc_to_df(roc_xgb, "XGB Boost")
 
 ```
 
+**Insights**
+
+-   XGB Gradient Boost model scores,
+    -   Accuracy = 72.4%; Precision = 70.4%
+    -   Recall = 51.3%; Specificity = 86%
+    -   F1 score = 59%; ROC_AUC score = 78%
+
 # Model Results and Evaluation
 
 Performance was evaluated using confusion matrix, model metrics table,
 variable importance plots and ROC-AUC plots on the test dataset.
 
-**Confusion Matrix**
-
--   The confusion matrix revealed class-level performance (e.g., ability
-    to correctly identify high traffic vs. low traffic recipes).
+**Confusion Matrix** The confusion matrix revealed class-level
+performance (e.g., ability to correctly identify high traffic vs. low
+traffic recipes).
 
 ```{r confusion matrix, warning = FALSE, message = FALSE}
 
@@ -1213,6 +1265,9 @@ ggplot(all_cm, aes(x = Reference, y = Prediction, fill = Frequency)) +
 
 **Insights**
 
+Confusion matrix indicates the accurate and false prediction in each of
+the models. Out of the four models,
+
 **Model Metrics Comparison**
 
 -   Results were consolidated into a comparison table to assess which
@@ -1239,6 +1294,28 @@ kable(model_results, caption = "Model Results") %>%
 ```
 
 **Insights**
+
+Based on the model metrics,
+
+-   Logistic Regression and Random Forest scored 72.8% accuracy in
+    predicting recipes than the Decision Tree and XGB Boost
+
+-   Among
+
+-   **Performance metrics**: Check **accuracy, precision, recall, F1,
+    AUC** across models.
+
+    -   If recall (sensitivity) for *High traffic* is strong, the model
+        is good at **catching recipes likely to go viral**
+
+    -   If precision is strong, the model avoids **false alarms** (not
+        wasting homepage space on duds
+
+-   **Model comparison**: Random Forest and XGBoost usually outperform
+    Logistic Regression, but LR gives **interpretability**.
+
+    -   Recommendation: Use a tree-based method for deployment, but use
+        LR for insight
 
 **Variable Importance Plots**
 
