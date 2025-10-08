@@ -148,90 +148,49 @@ and promoting customer engagement and subscriptions.
 
 # Introduction {#introduction}
 
-The success of Tasty Bytes, a food platform, depends strongly on
-engaging visitors with recipes that capture their attention. Homepage
-recipes are the first point of contact for users, influencing customer
-engagement and subscription. Currently, recipe selection for the
-homepage is based on personal preference rather than systematic
-analysis, resulting in inconsistent traffic performance.
+Tasty Bytes was founded in 2020 during the Covid-19 pandemic to inspire
+people with recipes using limited home supplies. Today, it offers meal
+plans and ingredient delivery through a subscription service.
 
-Internal observations show that if a popular recipe is displayed,
-overall website traffic can increase by up to 40%, directly contributing
-to subscription growth. However, without a reliable way to predict which
-recipes will be popular, the company risks missing valuable
-opportunities to maximize engagement and revenue.
-
-By analyzing recipe attributes such as nutrient composition, category,
-and servings, alongside traffic outcomes, it becomes possible to predict
-recipe popularity systematically. Leveraging machine learning allows a
-shift from intuition-driven decisions to data-driven strategies,
-improving homepage performance, driving consistent growth, and enhancing
-user experience.
+To boost user engagement, Tasty Bytes aims to feature recipes that
+attract high website traffic. Currently, recipe selection is subjective,
+leading to inconsistent results. Data shows that featuring popular
+recipes can increase total traffic by up to 40%, directly influencing
+subscriptions. Using machine learning on available recipe dataset, the
+platform can predict high-traffic recipes and make data-driven homepage
+decisions, improving traffic and subscriptions.
 
 # Aim and Methodology of this Project {#aim-and-methodology-of-this-project}
 
 **Aim and Focus**\
-The primary objective of this project is to predict which recipes will
-lead to high traffic when featured on the homepage and increase the user
-engagement and subscription on the Tasty Bytes platform. Specifically,
-the goal is to build a classification model that can identify
-high-performing recipes with at least 80% accuracy, ensuring homepage
-selections consistently optimize engagement.
-
-**Focus areas include:**
-
--   Identifying recipe attributes (nutritional values, category,
-    servings) most strongly correlated with high traffic.
--   Comparing model performance using individual features vs. combined
-    features.
--   Demonstrating the role of machine learning in improving digital
-    engagement and subscription growth.
--   Providing actionable business insights using key performance
-    indicator (KPI) to help editors select recipes strategically.
-
-This dual focus — technical model accuracy and practical business impact
-— ensures the outcomes are valuable both operationally and
-strategically.
+The goal of this project was to identify which recipes are likely to
+generate high website traffic and to develop a model that can correctely
+predict high-traffic recipes at least 80% of the time. This directly
+supports data-driven homepage selection to boost customer engagement and
+subscriptions.
 
 **Methodology**\
-The project applies binary classification models to predict traffic
-outcomes (`High` vs. `Low`). The key steps include:
+The study applies binary classification to predict recipe traffic (High
+vs Low) using recipe attributes.
 
-1.  **Data Exploration and Preprocessing**
-    -   Inspect distributions of variables in the dataset.
-    -   Handle missing values systematically.
-    -   Detect and address anomalies such as negative or extreme
-        nutrient values.
-    -   Encode categorical variables for model compatibility.
-2.  **Feature Analysis and Selection**
-    -   Analyze correlation between nutrient composition and traffic
-        outcomes.
-    -   Assess the predictive power of individual features.
-    -   Explore category-specific performance patterns.
-3.  **Model Selection, Development, and Training**
-    -   Implement classification algorithms including Logistic
-        Regression, Decision Trees, Random Forest, and Gradient Boosted
-        Trees (XGBoost).
-    -   Train models with cross-validation to avoid overfitting.
-    -   Experiment with balancing strategies (since traffic labels may
-        be imbalanced).
-4.  **Model Evaluation**
-    -   Use metrics such as Accuracy, Precision, Recall, F1-score, and
-        ROC-AUC.
-    -   Compare model performances to identify the best approach.
-    -   Ensure models consistently achieve ≥80% accuracy in predicting
-        High traffic.
-5.  **Feature Importance Extraction**
-    -   Use ensemble models (Random Forest, XGBoost) to determine which
-        features drive traffic predictions.
+Key steps include:
 
-    -   Cross-validate with simpler models to confirm robustness.
+Data Preparation: Cleaning, encoding, and validating recipe dataset.
+Exploratory Data Analysis (EDA): Identifying key relationships between
+recipe variables through data analysis and visualization Modelling:
+Training machine learning models with cross-validation. Evaluation:
+Comparing models using Accuracy, Precision, Recall, F1-score, and
+ROC-AUC to identify the best-performing approach. Business KPI
+alignment: Evaluating model results against key business indicators such
+as Recall, Accuracy, and F1 Score for only High Traffic recipe
+predictions - to ensure predictions translate into measurable engagement
+and subscription impact.
 
-The outcome will demonstrate how data-driven recipe selection supports
-homepage editors in making informed choices, driving traffic growth, and
-ultimately increasing subscriptions.
+This approach ensures that model insights are both technically robust
+and practically relevant for optimizing recipe promotion on the Tasty
+Bytes homepage.
 
-# Exploratory Data Analysis - EDA {#exploratory-data-analysis-EDA}
+# Data Analysis and EDA {#data-analysis-and-eda}
 
 First, load the necessary libraries in R that are essential for the
 success of the **“Recipe Popularity Prediction”** project. These include
@@ -247,14 +206,12 @@ library(dplyr)          # Data manipulation
 # Visualization
 library(ggplot2)        # Powerful and flexible plotting
 library(GGally)         # Pair plot
-library(scales)         # Color customization
-library(ggfortify)
-library(RColorBrewer)
-library(viridis)
+library(ggfortify)      # 
+library(RColorBrewer)   # Color Customization
+library(viridis)        # Color Customization
 library(naniar)         # Visualize missing values
 library(kableExtra)     # Table styling
 library(corrplot)       # Correlation plots
-library(gridExtra)      # Arranging multiple plots
 library(patchwork)      # Arranging multiple plots
 library(Ckmeans.1d.dp)  # required
 library(DiagrammeR)
@@ -271,12 +228,34 @@ library(pROC)           # ROC curves and AUC metrics
 
 ```
 
-## Data Loading and Pre-processing
-
-### Data exploration
+## Data exploration
 
 The first step of the project involves exploring the distribution of
 features in the dataset `recipe_site_traffic_2212.csv`.
+
+**Dataset Description**
+
+The dataset consists of 947 observations across 8 variables, with the
+following data variables:
+
+recipe: unique identifier for each recipe which does not contribute much
+to the project needs and can be dropped from analysis; category: defines
+the type of recipe and are listed in one of eleven possible groupings;
+servings: number of servings, plausible and consistent with typical
+recipe sizes; Nutrient Composition (Calories, Carbohydrates, Sugar,
+Protein): nutrient content, reflecting typical values for light to rich
+recipes; Target Variable (traffic): recipe popularity, with a moderate
+class distribution between high and low traffic. Data Types of these
+variables,
+
+Numeric: 4 variables Integer: 1 variable Character: 3 variables
+(including servings, which was converted to numeric) The dataset
+contains missing values, which need to be carefully analyzed and
+appropriately imputed before further analysis.
+
+This analysis provides a structured foundation for building reliable
+models that predict which recipes are most likely to succeed on the
+homepage.
 
 ```{r data loading}
 
@@ -285,65 +264,15 @@ path <- "D:/Study/Machine Learning/Projects/Completed projects for GitHub/Predic
 # load the dataset
 recipe_df <- read.csv(path)
 
-kable(head(recipe_df), caption = "Soil Measurements") %>%
-  kable_styling(full_width = F, position = "left")
-
 # Structure of the dataset
 str(recipe_df)
 
-```
-
-**Dataset Description**
-
-Each row represents a recipe instance described by:
-
--   Recipe ID (`recipe`) – unique identifier.
--   Nutrient Composition:
-    -   `calories`: energy content per recipe.
-    -   `carbohydrate`: carbohydrate content.
-    -   `sugar`: sugar content.
-    -   `protein`: protein content.
--   Category (`category`) – recipe type (e.g., Beverages, Lunch/Snacks,
-    Pork).
--   Servings (`servings`) – number of servings per recipe.
--   Traffic (`traffic`) – target variable, categorical.
-
-**Analysis steps include:**
-
--   Aligning the variable data types and names for analysis purpose and
-    better readability.
--   Examining central tendencies, ranges, and variability for each
-    nutrient.
--   Identifying and handling missing values in nutrients, servings, and
-    traffic.
--   Checking for anomalies such as outliers, negative or implausible
-    values.
--   Preparing the dataset (scaling nutrients, encoding categorical
-    variables) for predictive modeling.
-
-This analysis provides a structured foundation for building reliable
-models that predict which recipes are most likely to succeed on the
-homepage.
-
-### Data Analysis
-
-**1. Examining variable datatypes and distributions**
-
--   Aligning the data types for consistent analysis and renaming the
-    column names for better readability.
--   Computed summary statistics (mean, median, min, max, variance) for
-    nutrient composition - `calories`, `carbohydrate`, `sugar`, and
-    `protein`.
-
-```{r data exploration, warning = FALSE, message = FALSE}
+# Reading the Dataset
+kable(head(recipe_df), caption = "Recipe site traffic dataset") %>%
+  kable_styling(full_width = F, position = "left")
 
 # Changing the datatypes for efficient analysis
 recipe_df$servings = as.integer(recipe_df$servings)
-
-# Realigning the variable names for easy use and readability
-recipe_df <- recipe_df %>%
-  select(recipe, category, servings, calories, 
-         carbohydrate, sugar, protein, traffic = high_traffic)
 
 # Statistical Summary of the dataset
 kable(summary(recipe_df), caption = "Descriptive Statistics of Recipe Dataset") %>%
@@ -351,34 +280,32 @@ kable(summary(recipe_df), caption = "Descriptive Statistics of Recipe Dataset") 
 
 ```
 
--   The dataset `recipe_site_traffic_2212.csv` consists of 947
-    observations and 8 variables.
--   Columns such as recipe (ID) and servings were aligned to proper data
-    types (numeric for computation, categorical for grouping). Column
-    names were cleaned for clarity and consistency.
--   Nutrient composition variables (calories, carbohydrate, sugar,
-    protein) were analyzed for central tendency and spread.
-    -   Calories ranged from very low values (\<50 kcal) in beverages to
-        \>900 kcal in heavy dishes like pork-based recipes.
-    -   Carbohydrates and sugar showed large variability, with high
-        values concentrated in desserts and beverages.
-    -   Protein was strongly skewed, with higher levels in meat-based
-        categories.
--   Variability confirmed that the dataset captures a broad spectrum of
-    recipe types, with distinct nutritional profiles across categories.
+-   **Duplicates:** No duplicate rows were identified in the dataset,
+    confirming unique recipe records.
+-   **Overall missing values:** Approximately 10.3% of the dataset
+    contains missing values.
+    -   Missing values are not randomly distributed — they are clustered
+        across specific variables and observations.
+-   Summarizing the missing values in the dataset:
 
-**2. Handling duplicate and missing values**
+Out of 947 rows,
 
-Identifying duplicate and missing values is crucial to get a better and
-consistent data for modelling.
+rows_with_any_na = 414 rows contain missing values rows_traffic_na = 373
+rows contain missing values in the traffic column rows_nutrients_na = 52
+rows contain missing values in the nutrient variables (calorie,
+carbohydrate, sugar and protein), all occurring in the same rows.
+rows_ser = 3 rows contain missing values in the servings column, only in
+the Lunch/Snack recipe category
 
 ```{r missing values summary, warning = FALSE, message = FALSE}
 
 # Check for duplicate values
 duplicate_values <- sum(duplicated(recipe_df))
+cat("Number of duplicate values:", duplicate_vals, "\n")
 
-kable(duplicate_values, caption = "Duplicated values in the Dataset") %>%
-  kable_styling(full_width = F, position = "left")
+# Check for the Unique recipe category values
+unique_cat <- unique(recipe_df$category)
+cat("Unique Values in the recipe category variable:", length(unique_cat), "\n", paste(unique_cat, collapse = ", "))
 
 # Visualizing the missing values
 recipe_miss <- recipe_df %>%
@@ -397,11 +324,11 @@ nutrient_vars <- c("calories", "carbohydrate", "sugar", "protein")
 
 missing_summary <- recipe_df %>%
   summarize(
-    total_rows_na = as.integer(n()),
-    rows_with_any_na = sum((if_any(everything(), is.na))),
-    rows_ht_na = sum(is.na(traffic)),
-    rows_nutrient_na = sum(if_all(all_of(nutrient_vars), is.na)),
-    rows_ht_ser = sum(is.na(servings))
+    total_rows = as.integer(n()), # total rows 
+    rows_with_any_na = sum((if_any(everything(), is.na))), # Rows with any NAs 
+    rows_traffic_na = sum(is.na(high_traffic)), # Rows with traffic NAs 
+    rows_nutrient_na = sum(if_all(all_of(nutrient_vars), is.na)), # Rows with NAs in nutrient variables
+    rows_ser = sum(is.na(servings)) # Rows with NAs in servings variables
   ) 
 
 kable(missing_summary, caption = "Distribution of Missing values - Recipe Dataset") %>%
@@ -409,51 +336,63 @@ kable(missing_summary, caption = "Distribution of Missing values - Recipe Datase
 
 ```
 
--   **Duplicates:** No duplicate rows were identified in the dataset,
-    confirming unique recipe records.
--   **Overall missing values:** Approximately 10.3% of the dataset
-    contains missing values.
-    -   Missing values are not randomly distributed — they are clustered
-        across specific variables and observations.
--   **Variable-level missing values:**
-    -   **Target Variable (`traffic`)** has 373 missing values. Only
-        "High" values are explicitly recorded in the dataset, while
-        missing values indicate that recipes did not drive high traffic.
-        Thus, imputing missing values as "Low" is justified.
-    -   Nutrient composition (`calories`, `carbohydrate`, `sugar`,
-        `protein`) has 52 missing observations, and importantly, these
-        values are missing together within the same rows, across
-        categories.
-    -   `Servings` has 3 missing values, all in the “Lunch/Snacks”
-        category.
--   **Pattern of missing values:**
-    -   414 rows (43.7% of the dataset) contain at least one missing
-        value.
-    -   13 rows are missing both traffic and nutrient composition.
-    -   No missing values are present in the recipe ID or category.
+### Missing Values Imputation
+
+To achieve Tasty Bytes’ goal of selecting homepage recipes that attract
+the highest website traffic, missing data was carefully imputed to
+ensure consistency, fairness, and reliability in prediction. The
+approach focuses on using nutrient values per serving, allowing recipes
+of different portion sizes to be compared on an equal scale.
 
 **Imputation strategy applied**
 
--   ***Traffic (`traffic`):*** Since only `"High"` outcomes were
-    explicitly logged, missing values were systematically imputed as
-    `"Low"`. This assumption aligns with the data collection process and
-    business context, ensuring the target variable fully represents both
-    classes for classification.
--   ***Nutrients (`calories`, `carbohydrate`, `sugar`, `protein`):***
-    Missing nutrient values were imputed using category-level
-    per-serving averages. Nutrient-per-serving values were first
-    computed, and missing totals were estimated by multiplying these
-    averages by the known servings. This method preserves the
-    proportional relationship between nutrients and servings and ensures
-    imputed values remain realistic for each recipe category.
--   ***Servings (`servings`):*** Three missing values, all within the
-    `Lunch/Snacks` category, were imputed using nutrient-per-serving
-    ratios. Servings were estimated by dividing the recipe’s nutrient
-    values by the mean per-serving nutrient values for the category.
-    When multiple nutrients were available, estimates were
-    cross-validated for consistency, minimizing bias.
+-   Traffic (traffic):
 
-```{r missing imputation, warning = FALSE, message = FALSE}
+The traffic variable had missing entries where only High traffic values
+were recorded. These missing values were systematically imputed as Low,
+following the business logic that unrecorded traffic likely indicates
+Low engagement. This ensures that both traffic classes (High and Low)
+are represented for accurate model training and balanced classification.
+
+-   Nutrients (calories, carbohydrate, sugar, protein):
+
+Nutrient values were normalized per serving: Nutrient value per serving
+= Nutrient value / Number of servings
+
+Missing nutrient-per-serving values were filled with the category-wise
+mean nutrient-per-serving (e.g., average for “Desserts” or “Seafood”).
+Total nutrient values were then reconstructed by multiplying these
+averages by the number of servings. This ensures nutrient values are
+consistent and comparable across recipes, regardless of portion size.
+
+-   Servings (servings):
+
+Only three missing values were found in the Lunch/Snacks recipe
+category. These were imputed using nutrient-per-serving ratios: Each
+recipe’s serving size was estimated by dividing its total nutrient value
+by the category-level mean nutrient-per-serving. When multiple serving
+values were available, the final serving size was the average of those
+serving estimates from the calculations. This method ensures that
+serving sizes are realistic and proportionate to the nutrient content of
+each recipe.
+
+**Realigning the dataset for readability** Rearranging the variables
+position, name for better readability and removing the recipe variable
+from the clean dataset for modelling tasks.
+
+**Reasons for using Nutrient per serving for EDA and modelling tasks:**
+Using nutrient-per-serving is essential for this project because it:
+
+Standardizes comparison across recipes of varying sizes — a small snack
+and a family meal can now be evaluated on equal terms. Reflects consumer
+perception — users tend to judge recipes by their nutritional value per
+portion, not by the total batch. Improves model interpretability — helps
+the machine learning model identify which nutrients most influence
+recipe popularity independent of quantity. Supports business goals —
+ensures recommendations focus on recipes that are both appealing and
+practical for homepage placement, maximizing engagement per visit.
+
+```{r nutrient per serving, warning = FALSE, message = FALSE}
 
 # Generate the corresponding per_serving column names
 nutrient_vars_per_serving <- paste0(nutrient_vars, "_per_serving")
@@ -467,6 +406,13 @@ recipe_df <- recipe_df %>%
   mutate(round(across(all_of(nutrient_vars_per_serving),
                 ~ ifelse(is.na(.x), mean(.x, na.rm = TRUE), .x)), 2)) %>%
   ungroup()
+
+kable(head(recipe_df), caption = "Distribution of Missing values - Recipe Dataset") %>%
+  kable_styling(full_width = F, position = "left")
+
+```
+
+```{r missing imputation, warning = FALSE, message = FALSE}
 
 # Imputing all the high_traffic NAs with `Low`
 recipe_clean <- recipe_df %>%
@@ -495,9 +441,11 @@ recipe_clean <- recipe_clean %>%
   ungroup()
 
 recipe_clean <- recipe_clean %>%
-  select(-ends_with("_per_serving")) %>%
-  select(-recipe) %>%
-  mutate(traffic = as.factor(traffic))
+  select(-nutrient_vars) %>%
+  select(-recipe) %>% 
+	select(category, servings, calories_per_serving, # realigning the variables
+		   carbohydrate_per_serving, sugar_per_serving, 
+		   protein_per_serving, traffic)
 
 kable(head(recipe_clean), caption = "Cleaned Recipe dataset") %>%
   kable_styling(full_width = F, position = "left")
@@ -506,127 +454,14 @@ kable(head(recipe_clean), caption = "Cleaned Recipe dataset") %>%
 
 **Assessment:** This imputation strategy supports the project’s goals by
 ensuring a complete, consistent dataset without distorting the
-underlying nutritional logic. By grounding imputations in serving
+underlying nutritional logics. By grounding imputations in serving
 proportions and category-level norms, the approach retains realistic
 recipe variability, enabling reliable modeling of traffic outcomes.
 
-**Checking anomalies**
-
-Identifying and validating anomalies, implausible and outlier values in
-the cleaned dataset.
-
-```{r cleaned data summary, warning = FALSE, message = FALSE}
-
-kable(summary(recipe_clean), caption = "Descriptive Statistics of Cleaned Recipe Dataset") %>%
-  kable_styling(full_width = F, position = "left")
-
-```
-
--   ***RecipeID:*** `RecipeID` represents the continuous unique
-    identifier for each recipe and is dropped from the cleaned dataset.
--   ***Servings:*** Values range between 1 and 6, which is plausible and
-    consistent with typical recipe sizes. No negative or implausible
-    serving values were observed after cleaning.
--   ***Calories:*** Ranges from 0.14 kcal (likely a very light beverage
-    or recording error) up to 3633 kcal (likely a multi-serving dense
-    dish). The upper tail represents genuine high-calorie recipes, but
-    these values are consistent with rich or multi-ingredient meals.
--   ***Carbohydrates:*** Range from 0.03 g to 530.42 g. The maximum
-    reflects carbohydrate-heavy dishes (e.g., pasta or desserts). No
-    negative values were found.
--   ***Sugar:*** Range from 0.01 g to 148.75 g. The higher end
-    corresponds to desserts and beverages, which aligns with
-    expectations.
--   ***Protein:*** Range from 0.00 g to 363.36 g. The maximum reflects
-    meat- or protein-rich recipes. A few 0 g protein values were
-    flagged, corresponding to beverages or low-protein dishes, and are
-    not implausible.
--   ***Traffic (Target Variable):*** Distribution is 574 `High` (60%)
-    vs. 373 `Low` (40%), indicating a moderate class imbalance but no
-    anomalies.
-
-#### EDA Outcomes and Insights - Summary
-
--   The recipe dataset is well-structured with a clear distinction
-    between predictors (nutrients, category, servings) and outcome
-    (traffic).
--   Missing data was systematic and imputations ensured proportionality
-    between nutrients and servings while respecting category norms.
--   Nutrient ranges align with expected category patterns (e.g.,
-    desserts sugar-dense, meat dishes protein-rich). This variability is
-    important for distinguishing recipe types and traffic outcomes in
-    modeling. Nutrient profiles by category provide meaningful
-    differentiation aligned with real-world recipe expectations.
--   Outliers reflect natural variation across recipe types and add
-    useful variance, not noise. Outliers are informative, not errors,
-    and should be preserved for modeling as they contribute to recipe
-    diversity.
--   The target variable (`traffic`) shows a slight imbalance (60% High
-    and 40% Low), but not extreme, making it suitable for standard
-    classification approaches.
-
-The dataset is now ready for visualization and modelling, with variables
-prepared, anomalies understood, and imputations aligned with business
-and nutritional logic. This ensures predictive models will have both
-statistical rigor and real-world interpretability.
-
-### Data Visualization
-
-Data visualization was carried out to explore the distribution of recipe
-features, identify patterns across categories and servings, and uncover
-relationships between nutrients and traffic. These visualizations
-provide both statistical and business insights, helping guide feature
-engineering and model building.
-
-#### Distribution of Recipe Variables
-
-Visualizing the spread of nutrients composition (calories, carbohydrate,
-sugar, protein) helps in understanding the central tendencies, skewness,
-and presence of outliers. This step highlights the diversity across
-recipes and informs whether feature scaling or transformation is
-required before modeling.
-
-**Histograms / Density Plots**
-
-Histograms and density plots were created for each nutrient variable to
-examine their distributions. These plots reveal whether nutrient values
-are normally distributed or skewed, and highlight categories of recipes
-with extreme nutrient values. Identifying these patterns is useful in
-detecting the need for normalization and ensuring balanced model
-performance.
-
-```{r recipe distribution, warning = FALSE, message = FALSE}
-
-# Histogram and Density plots for nutrient composition
-histogram <- recipe_clean %>%
-  gather(key = "nutrients", value = "value", nutrient_vars) %>%
-  ggplot(aes(x = value, fill = nutrients)) +
-  geom_histogram(aes(y = after_stat(density)), binwidth = 0.3, alpha = 0.8) +
-  geom_density(alpha = 0.8) +
-  scale_x_log10() +
-  facet_wrap(~ nutrients, scales = "free") +
-  scale_fill_brewer(palette = "Dark2") +
-  labs(title = "Distribution of Nutrient composition",
-     x = "Value",
-     y = "Count") +
-  theme_minimal(base_size = 14) +
-  theme(plot.title = element_text(hjust = 0.5))
-
-histogram
-
-```
-
-**Insights**
-
--   Histograms reveal that nutrient variables are highly right-skewed,
-    indicating a higher prevalence of recipes with larger nutrient
-    values.
--   Log transformation of these variables normalizes the distribution,
-    making them suitable for modeling.
--   While outliers exist in each nutrient, they are valid and reflective
-    of the natural variability in recipe compositions.
-
-**Boxplots**
+**Identifying Outliers using IQR method** Interquantile range (IQR)
+method is used to identify the outliers in the nutrient variables. The
+presesnce of outliers is validated in the Exploratory Data Analysis
+(EDA) using Boxplot visualization.
 
 ```{r outlier detection, warning = FALSE, message = FALSE}
 
@@ -654,7 +489,7 @@ outlier_summary <- function (x) {
 }
 
 # Apply this function to each numeric column
-outlier_table <- lapply(recipe_clean %>% select(nutrient_vars), outlier_summary) 
+outlier_table <- lapply(recipe_clean %>% select(nutrient_vars_per_serving), outlier_summary) 
 names(outlier_table) <- colnames(recipe_clean %>% select(nutrient_vars))
 
 # Combine the results into a single data frame
@@ -662,6 +497,140 @@ outlier_table <- bind_rows(outlier_table, .id = "nutrients")
 
 kable(outlier_table, caption = "Outlier Summary for Nutrient composition") %>%
   kable_styling(full_width = F, position = "center")
+
+```
+
+**Checking anomalies**
+
+Identifying and validating anomalies, implausible and outlier values in
+the cleaned dataset.
+
+```{r cleaned data summary, warning = FALSE, message = FALSE}
+
+kable(summary(recipe_clean), caption = "Descriptive Statistics of Cleaned Recipe Dataset") %>%
+  kable_styling(full_width = F, position = "left")
+
+```
+
+### Data Validation
+
+The original dataset recipe_df, from the recipe_site_traffic_2212.csv
+file, was thoroughly validated and cleaned to ensure high data quality
+and reliability for predictive modelling.
+
+**Validation and Cleaning Steps:**
+
+recipe: A unique numeric identifier for each recipe. Verified for
+uniqueness with no duplicates. Excluded from modelling as it does not
+hold predictive or analytical relevance. category: Defines the recipe
+type, grouped into eleven unique predefined categories. Verified for
+consistency and completeness, with no missing or invalid entries
+detected; servings: Missing values were imputed using mean
+nutrient-per-serving within each recipe category, ensuring serving sizes
+align with category norms. Ranges from 1 to 6, reflecting realistic
+household recipe portions. Nutrient per serving composition: Missing
+values were imputed using category-level nutrient-per-serving averages,
+maintaining logical nutrient-to-serving relationships. Outliers detected
+through the IQR method were reviewed and retained if consistent with
+realistic food profiles and further validated in the EDA session.
+calories per serving: Ranges from 0.07 to 2332.32 kcal — spanning light
+beverages to high-calorie meals. carbohydrate per serving: Range from
+0.01 g to 383.06 g, capturing variation from light to carbohydrate-rich
+dishes. sugar per serving: Range from 0.00 g to 148.750 g, aligning with
+expected levels in desserts and beverages. protein per serving: Range
+from 0.00 g (low-protein items or beverages) to 182.63 g (protein-dense
+recipes), all within plausible bounds. Target Variable (traffic):
+Missing values were imputed as Low and converted to a binary factor (Low
+= 1, High = 2). The resulting 60:40 High:Low balance provides sufficient
+representation for reliable modelling with both regression and
+tree-based ensembles without needing rebalancing.
+
+Final Assessment: The final processed dataset, recipe_clean, contains
+947 observations across 8 variables, with no missing values or
+anamolies, ensuring that all recipes are comparable and analytically
+consistent. The validated dataset is clean, complete, and model-ready,
+preserving the natural diversity of Tasty Bytes’ recipe portfolio while
+ensuring consistent scaling for machine learning. It now provides a
+strong foundation for:
+
+Identifying recipe variables that drive High website traffic, Supporting
+data-driven homepage selection, and Guiding editorial and marketing
+strategies with actionable, evidence-based insights.
+
+## Exploratory Data Analysis and Visualization
+
+Data visualization was carried out to explore the distribution of recipe
+features, identify patterns across categories and servings, and uncover
+relationships between nutrients and traffic. These visualizations
+provide both statistical and business insights, helping guide feature
+engineering and model building.
+
+### Single Variable Analysis
+
+Single-variable plots were created to understand individual
+distributions:
+
+Distribution of individual Recipe Variables
+
+1.  Nutrient per serving Distribution A histogram and density overlay
+    for nutrient per serving values revealed:
+
+Nutrient per serving values are mostly right-skewed, showing many
+high-value recipes. Log transformation normalizes them, making the data
+suitable for modelling.
+
+```{r recipe distribution, warning = FALSE, message = FALSE}
+
+# Histogram and Density plots for nutrient composition
+histogram <- recipe_clean %>%
+  gather(key = "nutrients", value = "value", all_of(nutrient_vars_per_serving)) %>%
+  filter(value > 0) %>%
+  ggplot(aes(x = value, fill = nutrients)) +
+  geom_histogram(binwidth = 10, alpha = 0.8, show.legend = FALSE) +
+  facet_wrap(~ nutrients, scales = "free") +
+  scale_fill_brewer(palette = "Dark2") +
+  labs(title = "Distribution - Nutrient per Serving composition",
+     x = "Value",
+     y = "Count") +
+  theme_minimal(base_size = 14) +
+  theme(plot.title = element_text(hjust = 0.5, size = 12),
+		plot.margin = ggplot2::margin(t = 10, r = 40, b = 10, l = 10))
+
+histogram
+
+histogram_log <- recipe_clean %>%
+  gather(key = "nutrients", value = "value", all_of(nutrient_vars_per_serving)) %>%
+  filter(value > 0) %>%
+  ggplot(aes(x = value, fill = nutrients)) +
+  geom_histogram(aes(y = after_stat(density)), binwidth = 0.3, alpha = 0.8, show.legend = FALSE) +
+  geom_density(alpha = 0.3, show.legend = FALSE) +
+  scale_x_log10() +
+  facet_wrap(~ nutrients, scales = "fixed") +
+  scale_fill_brewer(palette = "Dark2") +
+  labs(title = paste("Distribution - Nutrient per Serving composition", "\n" ,"(log-transformed)"),
+     x = "Value",
+     y = "Count") +
+  theme_minimal(base_size = 14) +
+  theme(plot.title = element_text(hjust = 0.5, size = 12),
+		plot.margin = ggplot2::margin(t = 10, r = 40, b = 10, l = 10))
+
+histogram_log
+
+```
+
+Distribution and variability of nutrient values across recipe categories
+Highlighting typical ranges and potential outliers for each nutrient.
+
+Outliers in nutrient composition generally align with expected category
+patterns: for example, desserts are sugar-dense, while meat-based dishes
+are protein-rich. The observed variability supports nutrient profiles
+differ meaningfully by category. These distinctions provide valuable
+information for modelling, helping differentiate recipe types and
+potentially influencing traffic outcomes, while reflecting real-world
+expectations of recipe composition. Therefor, outliers are not excluded
+from the dataset and will be used for modelling.
+
+```{r outlier box plot, warning = FALSE, message = FALSE}
 
 # Reshape the outlier summary table for visualization
 outlier_long <- outlier_table %>%
@@ -671,15 +640,15 @@ outlier_long <- outlier_table %>%
                values_to = "Value")
 
 boxplots <- recipe_clean %>%
-  gather(key = "nutrients", value = "value", nutrient_vars) %>%
+  gather(key = "nutrients", value = "value", all_of(nutrient_vars_per_serving)) %>%
   ggplot(aes(x = category, y = value, fill = nutrients)) +
-  geom_boxplot() +
+  geom_boxplot(show.legend = FALSE) +
   # Add quantile lines
   geom_hline(data = outlier_long, 
              aes(yintercept = Value, 
                  linetype = Quantile, 
-                 color = Quantile), 
-             inherit.aes = FALSE, linewidth = 0.7, alpha = 0.9) +
+                 color = Quantile),
+			 linewidth = 0.7) +
   facet_wrap(~ nutrients, scales = "free_y") +
   scale_color_manual(values = c(Lower_threshold = "orange", 
                                 Median = "green", 
@@ -688,316 +657,265 @@ boxplots <- recipe_clean %>%
                                    Median = "solid", 
                                    Upper_threshold = "dashed")) +
   scale_x_discrete(expand = expansion(mult = c(0, 0))) +
-  labs(title = "Box plot of Nutrient composition", 
+  labs(title = "Box plot - Nutrient per serving vs categories", 
        x = "Value",
        y = "Count") +
   theme_minimal(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-        plot.title = element_text(hjust = 0.5))
+  theme(
+	  legend.position = "bottom",
+      legend.box = "horizontal", 
+	  axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+      plot.title = element_text(hjust = 0.5, size = 12),
+	  plot.margin = ggplot2::margin(t = 20, r = 40, b = 10, l = 10)) 
 
 boxplots
 
 ```
 
-**Insights**
+Recipe Category Frequency
 
-From the box plots, outliers in the nutrient composition ranges align
-with expected category patterns (e.g., desserts sugar-dense, meat dishes
-protein-rich). This variability aligns with EDA outcomes where nutrient
-profiles by category is important for distinguishing recipe types,
-traffic outcomes in modeling and provide meaningful differentiation
-aligned with real-world recipe expectations.
+Breakfast, Chicken Breast, and Beverages are the most frequent
+categories. All other categories have counts above 50 and occur
+consistently.
 
-#### Traffic Insights
+```{r bar recipe frequency, warning = FALSE, message = FALSE}
 
-Traffic analysis provides a perspective on recipe popularity and
-visibility on the Tasty Bytes platform. Understanding which recipe
-categories and serving sizes attract high or low traffic can inform
-content strategy.
+# Bar plot to visualize the recipe categories frequency
+bar_frequency <- recipe_clean %>%
+  count(category) %>%
+  arrange(desc(n)) %>%
+  ggplot(aes(x = reorder(category, -n), y = n, fill = n)) +
+  geom_col() +
+  scale_fill_gradient(low = "#66C2A5", high = "#A63600", name = "Frequency") +
+  labs(
+    title = "Recipe Category Distribution",
+    x = "Category",
+    y = "Count"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+	  legend.position = "bottom",
+	  plot.title = element_text(hjust = 0.5, vjust = 2),
+	  axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+	  plot.margin = ggplot2::margin(t = 20, r = 40, b = 10, l = 10))
 
-**Bar Plot / Count Plot**
+bar_frequency
 
-A bar plot was used to show the distribution of the target variable
-(traffic) across recipe categories. This highlights which categories
-most frequently drive high traffic. A similar plot was generated for
-servings, showing whether portion size plays a role in traffic outcomes.
+```
 
-```{r traffic1, warning = FALSE, message = FALSE}
+### Multivariable Analysis
+
+Multiple variable plots were created to understand relationships between
+variable distributions:
+
+Traffic Insights
+
+Bar Plot / Count Plot across recipe variables Bar plots were created to
+visualize the distribution of the target variable (traffic) across
+recipe categories and serving sizes.
+
+Category-wise Traffic: High traffic: Recipes in the Vegetable, Potato,
+and Pork categories receive the most views, indicating strong user
+interest. Low traffic: Beverages, Breakfast, and Chicken Breast recipes
+are more common in the low-traffic segment, suggesting lower user
+engagement for these categories.
+
+```{r bar traffic, warning = FALSE, message = FALSE}
 
 # Bar plot for traffic across different categories 
 bar_traffic_cat <- recipe_clean %>%
   ggplot(aes(x = category, fill = traffic)) +
   geom_bar(position = "dodge", alpha = 0.8) +
-  scale_fill_brewer(palette = "Dark2") +
-  labs(title = "Bar plot for traffic across different categories", 
+  scale_fill_manual(values = c("High" = "#A63600", "Low"  = "#66C2A5")) +
+  labs(title = "Bar plot - Traffic vs Recipe categories", 
        x = "Value",
        y = "Count") +
   theme_minimal(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, size = 10),
-        plot.title = element_text(hjust = 0.5))
+  theme(
+	  legend.position = "bottom",
+	  plot.title = element_text(hjust = 0.5, vjust = 2),
+	  axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+	  plot.margin = ggplot2::margin(t = 20, r = 40, b = 10, l = 10))
 
 bar_traffic_cat
+
+```
+
+Serving Size Trends: Recipes with 4 to 6 servings tend to attract higher
+traffic, indicating a user preference for medium to large portions. The
+3-serving recipe appears due to imputed data used to handle missing
+values, so its trend should be interpreted with caution.
+
+```{r bar serving, warning = FALSE, message = FALSE}
 
 # Bar plot for traffic across different servings
 bar_traffic_ser <- recipe_clean %>%
   ggplot(aes(x = servings, fill = traffic)) +
   geom_bar(position = "dodge", alpha = 0.8) +
-  scale_fill_brewer(palette = "Dark2") +
-  labs(title = "Bar plot for traffic across different servings", 
+  scale_fill_manual(values = c("High" = "#A63600", "Low"  = "#66C2A5")) +
+  labs(title = "Bar plot - Traffic vs Servings", 
        x = "Value",
        y = "Count") +
   theme_minimal(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, size = 10),
-        plot.title = element_text(hjust = 0.5))
+  theme(
+	  legend.position = "bottom",
+	  plot.title = element_text(hjust = 0.5, vjust = 2),
+	  axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+	  plot.margin = ggplot2::margin(t = 20, r = 40, b = 10, l = 10))
 
 bar_traffic_ser
 
 ```
 
-**Insights**
+Histogram of Traffic vs. Nutrient Composition A histogram for trafiic vs
+nutrient values revealed:
 
--   **Category-wise Traffic:**
-    -   High traffic: Vegetable, Potato, and Pork recipes are the most
-        viewed.
-    -   Low traffic: Beverages, Breakfast, and Chicken Breast recipes
-        have higher counts in the low-traffic segment.
--   **Serving Size Trends:**
-    -   Recipes with 4 and 6 servings generally attract higher traffic.
+Log transformation clarified differences between High and Low traffic
+recipes. High traffic recipes tend to have medium to high nutrient
+values. Users seem to prefer richer, more filling recipes.
 
-    -   One 3-serving dish reflect imputation to address missing data.
-
-**Histogram of Traffic vs. Nutrient Composition**
-
-Histograms of nutrients split by traffic levels were generated. These
-plots help reveal whether nutrient intensity (e.g., high-calorie or
-high-protein recipes) correlates with higher traffic.
-
-```{r traffic2, warning = FALSE, message = FALSE}
+```{r histo traffic, warning = FALSE, message = FALSE}
 
 # Histogram plot of traffic across nutrient composition
 bar_nutrient <- recipe_clean %>%
-  gather(key = "nutrients", value = "value", nutrient_vars) %>%
+  gather(key = "nutrients", value = "value", all_of(nutrient_vars_per_serving)) %>%
+  filter(value > 0) %>%
   ggplot(aes(x = value, fill = traffic)) +
   geom_histogram(position = "dodge", binwidth = 0.3, alpha = 0.8) +
   scale_x_log10() +
   facet_wrap(~ nutrients, scales = "free") +
-  scale_fill_brewer(palette = "Dark2") +
-  labs(title = "Distribution of Nutrient composition",
+  scale_fill_manual(values = c("High" = "#A63600", "Low"  = "#66C2A5")) +
+  labs(title = "Distribution - Nutrient per serving composition vs Traffic",
      x = "Value",
      y = "Count") +
   theme_minimal(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, size = 10),
-        plot.title = element_text(hjust = 0.5))
+  theme(
+	  legend.position = "bottom",
+	  plot.title = element_text(hjust = 0.5, vjust = 2),
+	  axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+	  plot.margin = ggplot2::margin(t = 20, r = 40, b = 10, l = 10))
  
 bar_nutrient
 
 ```
 
-**Insights**
+Heatmap of Traffic by Category and Servings A two-dimensional heatmap
+was developed to examine how recipe category and serving size jointly
+influence website traffic.
 
--   After log transformation, nutrient distributions differentiate
-    between high- and low-traffic recipes.
--   High-traffic recipes consistently outnumber low-traffic recipes
-    across all nutrient variables, suggesting a general preference for
-    nutrient-rich recipes.
-
-**Heatmap of Traffic by Category and Servings**
-
-A two-dimensional heatmap was created to show how recipe categories vs
-serving sizes jointly influence traffic outcomes. This allows us to
-visually capture interactions, such as whether larger servings in
-certain categories are more likely to attract high traffic.
+Recipes with 4 & 6 servings attract the most traffic, showing user
+preference for this portion size. The one 3-serving recipe in the
+Lunch/Snack category reflect data imputation and should be interpreted
+cautiously. High-traffic recipes: Vegetable, Potato, and Pork categories
+at 4 servings. Low-traffic recipes: Breakfast, Beverages, and Chicken
+Breast at 4 servings.
 
 ```{r traffic3, warning = FALSE, message = FALSE}
 
 # Heatmap of Traffic by Category and Servings
-heatmap_data <- recipe_clean %>%
+hm_traffic_ser <- recipe_clean %>%
   group_by(category, servings, traffic) %>%
-  summarise(count = n(), .groups = "drop")
-
-hm_traffic_ser <- ggplot(heatmap_data, aes(x = as.factor(servings), y = category, fill = count)) +
+  summarise(count = n(), .groups = "drop") %>%
+  ggplot(aes(x = as.factor(servings), y = category, fill = count)) +
   geom_tile(color = "white", alpha = 0.8) +
   facet_wrap(~traffic) +
-  scale_fill_gradient(low = "#1b9e77", high = "#d95f02") +
-  labs(title = "Heatmap of Traffic by Category and Servings",
+  scale_fill_gradient(low = "#66C2A5", high = "#A63600") +
+  labs(title = "Heatmap - Traffic vs Category and Servings",
        x = "Servings", y = "Category", fill = "Count") +
   theme_minimal(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, size = 10),
-        plot.title = element_text(hjust = 0.5))
+  theme(
+	  legend.position = "bottom",
+	  plot.title = element_text(hjust = 0.5, vjust = 2),
+	  axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+	  plot.margin = ggplot2::margin(t = 20, r = 40, b = 10, l = 10)) 
 
 hm_traffic_ser
 
 ```
 
-**Insights**
+Feature Relationships
 
--   4-serving recipes consistently show the highest traffic in both
-    high- and low-traffic segments.
--   High traffic is dominated by Vegetable, Potato, and Pork recipes at
-    4 servings.
--   Low traffic is mainly observed in Breakfast, Beverages, and Chicken
-    Breast recipes at 4 servings.
+Correlation Heatmap A correlation heatmap was generated for the numeric
+variables in the dataset.
 
-#### Feature Relationships
-
-Exploring relationships among nutrient variables and servings across
-categories can uncover potential drivers of recipe visibility. These
-insights inform feature selection for predictive modeling. Nutrient
-variables (calories, carbohydrates, sugar, protein) and servings vary
-across categories and traffic outcomes, highlighting their potential
-influence on traffic. Understanding these relationships supports
-interpretation of model outputs and feature importance ranking.
-
-**Correlation Heatmap**
-
-A correlation heatmap was generated for the nutrient variables. This
-visualization helps identify multicollinearity between numeric variables
-and provides insight into which features contribute unique information
-for classification. Understanding correlations supports feature
-selection and reduces redundancy in the predictive model.
+Numeric variables show no strong correlations, each providing unique
+information. All can be kept in the model without multicollinearity
+concerns.
 
 ```{r feature relationhship, warning = FALSE, message = FALSE}
 
 # Correlation Matrix for the soil parameters
-cor_matrix <- cor(recipe_clean %>% select(c(nutrient_vars, servings)))
-corrplot(cor_matrix, method = "circle", type = "upper",
-         tl.col = "black", tl.srt = 45, 
-         col = adjustcolor(colorRampPalette(c("#1b9e77", "#d95f02"))(200), 
+cor_matrix <- cor(recipe_clean %>% select(all_of(c(nutrient_vars_per_serving, "servings"))))
+suppressWarnings(corrplot(cor_matrix, method = "circle", type = "upper",
+         tl.col = "black", tl.srt = 45, tl.cex = 0.8, cl.cex = 1.1,
+         col = adjustcolor(colorRampPalette(c("#66C2A5", "#A63600"))(200), 
                            alpha.f = 0.8),
          addCoef.col = "black", number.cex = 0.7, number.digits = 2,
          title = "Correlation Matrix of nutrient composition",
-         insig = "blank", tl.cex = 0.8, cl.cex = 0.8, 
-         cl.lim = c(-1, 1), mar = c(0,0,1,0))
+         insig = "blank", cl.lim = c(-1, 1), mar = c(0,0,7,0)))
 
 ```
 
-**Insights**
+## Overall Summary of EDA
 
--   The correlation heatmap shows no strong linear relationships among
-    numeric variables in the cleaned dataset. This suggests that each
-    nutrient variable provides unique information for predicting
-    traffic.
+The exploratory data analysis of the recipe dataset provides key
+insights that directly support Tasty Bytes’ goal of predicting and
+featuring recipes that drive High website traffic.
 
-## Overall Summary of Data Visualization
+Nutrient per serving Composition and Outliers:
 
-The visual exploration of the Tasty Bytes dataset provides critical
-insights to support predictive modeling and strategic content decisions:
+Nutrient per serving variations are normally distributed after log
+transformation. Nutrient per serving Outlier values across categories
+align with real-world recipe types. Traffic Patterns by Category and
+Serving Size:
 
--   Nutrient distributions are right-skewed but normalize well after log
-    transformation, making them suitable for analysis.
--   Recipe popularity is influenced by category and serving size, with
-    high-traffic recipes concentrated in Vegetable, Potato, and Pork
-    categories and typically offered in 4 servings.
--   Relationships among nutrient variables and servings highlight
-    potential drivers of visibility, while low multicollinearity ensures
-    that each feature contributes unique predictive value.
+High traffic is concentrated in Vegetable, Potato, and Pork recipes,
+while Beverages, Breakfast, and Chicken Breast recipes are more
+prevalent in the Low traffic segment. Recipes serving 4–6 portions
+consistently attract more engagement, suggesting users are drawn to
+shareable or family-sized recipes. Confirms that medium-to-large
+servings correlate strongly with High traffic, emphasizing the influence
+of servings size on user interest. Nutrient Intensity and User
+Engagement:
 
-These findings directly support the project goal of **optimizing recipe
-recommendations and understanding traffic drivers**, ensuring that Tasty
-Bytes can prioritize high-engagement recipes and strategically guide
-content development.
+Density plots and histograms reveal that recipes with higher nutrient
+content tend to attract more traffic. This suggests users prefer
+substantial, satisfying recipes over lighter options when browsing
+featured recipes. Feature Relationships and Multicollinearity:
+
+Correlation analysis shows no strong linear dependencies among numeric
+variables, meaning each contributes distinct predictive value. This
+ensures the model can leverage diverse recipe attributes without
+redundancy. Overall Insight:
+
+Both nutrient composition and recipe characteristics (category and
+serving size) significantly influence user engagement. Recipes that are
+rich in nutrients, moderately portioned, and belong to popular
+categories are more likely to drive High traffic. These findings align
+directly with Tasty Bytes’ business goal — to use data-driven insights
+for smarter homepage recipe selection that maximizes visibility,
+engagement, and subscriptions.
 
 # Machine Learning Models
 
 The exploratory data analysis (EDA) and data visualizations revealed
 that nutrient composition, recipe category, and serving size all
-influence recipe traffic. Leveraging these insights, several
-classification models were developed to predict whether a recipe is
-likely to generate `High` or `Low` traffic.
+influence recipe traffic. This is a classification problem — predicting
+whether a recipe belongs to the High or Low traffic group based on its
+features.
 
-**Model Selection**\
-To assess predictive performance, both linear and non-linear models were
-employed:
+## Functions for Model Metric and Evaluation
 
--   **Logistic Regression:** Serves as a *baseline model* to capture
-    linear relationships between recipe features and traffic.
--   **Decision Trees:** Designed to model non-linear relationships and
-    feature interactions.
--   **Random Forest:** An ensemble approach that improves predictive
-    accuracy while identifying important predictors.
--   **Gradient Boosted Trees (XGBoost):** A boosting-based
-    classification method focused on minimizing misclassifications and
-    enhancing model performance.
+The machine learning models were trained on the training dataset and
+evaluated using the testing dataset to predict whether a recipe
+generates High or Low traffic. To ensure consistent and efficient
+evaluation across models and business goals, reusable functions were
+developed for:
 
-These models allow us to compare simple, interpretable models and
-complex algorithms to balance accuracy and interpretability.
+Confusion Matrix: Summarizes correct vs. incorrect predictions for Low
+and High traffic recipes.
 
-**Data Split and Model Training**\
-The dataset was split into training (70%) and testing (30%) sets to
-evaluate generalizability. Cross-validation was applied on the training
-set to ensure robust performance estimates. Hyperparameter tuning was
-carried out using grid search/random search to optimize model
-performance for Random Forest and XGBoost models.
-
-**Data preparation for modelling**
-
--   Continuous features (`calories`, `carbohydrate`, `sugar`, `protein`,
-    `servings`) were normalized and scaled to ensure comparability
-    across different ranges.
--   The categorical variable category was one-hot encoded for machine
-    learning compatability.
--   The target variable traffic was converted into a binary factor:
-    `Low` = 0, `High` = 1. The cleaned dataset exhibits a 60% `High` and
-    40% `Low` class distribution, which is acceptable for the models
-    selected.
-
-The final cleaned dataset was prepared accordingly to support machine
-learning workflows and predictive modelling.
-
-```{r data split}
-
-# Set seed for reproducibility
-set.seed(123)
-
-str(recipe_clean)
-
-# Split into training and test datasets
-train_index <- createDataPartition(recipe_clean$traffic, p = 0.7, list = FALSE)
-train <- recipe_clean[train_index, ]
-test <- recipe_clean[-train_index, ]
-
-# Dummy encoding for categorical variables
-dummies <- dummyVars(traffic ~., data = train)
-
-train_dummy <- predict(dummies, newdata = train)
-test_dummy <- predict(dummies, newdata = test)
-
-# Add back target column
-train_proc <- data.frame(train_dummy, traffic = train$traffic)
-test_proc <- data.frame(test_dummy, traffic = test$traffic)
-
-# PreProcessing the recipe_clean dataset for normalization across models
-preProc <- preProcess(train, method = c('center', 'scale'))
-
-train_final <- predict(preProc, train_proc)
-test_final <- predict(preProc, test_proc)
-
-# True labels
-true_labels <- test_final$traffic
-
-str(train_final)
-str(test_final)
-
-```
-
-# Machine Learning Model {#machine-learning-model}
-
-The machine learning models were trained on the **training dataset** and
-evaluated using the **testing dataset** to predict whether a recipe
-generates **High** or **Low** traffic. The models utilize recipe
-features such as **nutrient composition (calories, carbohydrate, sugar,
-protein), servings, and category** as inputs to predict recipe
-popularity.
-
-**Functions for Model Metric and Evaluation**
-
-To ensure consistent and efficient evaluation across models, reusable
-functions were developed for:
-
--   **Confusion Matrix:** Summarizes correct vs. incorrect predictions
-    for `Low` and `High` traffic recipes.
-
-```{r model eval cm, warning = FALSE, message = TRUE}
+```{r cm func, warning = FALSE, message = FALSE}
 
 # Functions to plot confusion matrix
 plot_cm <- function(cm, model_name) {
@@ -1009,11 +927,18 @@ plot_cm <- function(cm, model_name) {
 
 ```
 
--   **Model Metrics Dataframe:** Consolidates key performance metrics -
-    *`Accuracy, Precision, Recall, F1-score and ROC-AUC`* - for each
-    model, enabling easy straightforward comparison.
+Model Metrics Dataframe: Consolidates key performance metrics -Accuracy,
+Precision, Recall, F1-score and ROC-AUC - for each model, enabling easy
+straightforward comparison involving both the traffic factors - High &
+Low.
 
-```{r model eval metrics, warning = FALSE, message = TRUE}
+Accuracy: Overall proportion of correct predictions. Precision: How many
+predicted positives are actually positive. Sensitivity (Recall): How
+well the model detects actual positives. Specificity: How well the model
+detects actual negatives. F1 Score: Balance between precision and
+recall. ROC AUC: Overall ability to distinguish between classes.
+
+```{r model metric func, warning = FALSE, message = FALSE}
 
 # Function to get metrics for the model
 get_metrics <- function(cm, auc_val, model_name = "Model"){
@@ -1031,7 +956,7 @@ get_metrics <- function(cm, auc_val, model_name = "Model"){
     Model = model_name,
     Accuracy = accuracy,
     Precision = precision,
-    Recall = sensitivity,
+    `Sensitivity/Recall` = sensitivity,
     Specificity = specificity,
     F1_score = f1,
     ROC_AUC = as.numeric(auc_val))
@@ -1041,10 +966,10 @@ get_metrics <- function(cm, auc_val, model_name = "Model"){
 
 ```
 
--   **Variable Importance plots:** Highlights the most influential
-    recipe features driving traffic predictions.
+Variable Importance plots: Highlights the most influential recipe
+features driving traffic predictions.
 
-```{r model eval varimp, warning = FALSE, message = TRUE}
+```{r varimp func, warning = FALSE, message = FALSE}
 
 # Function to plot variabe importance for models
 plot_all_varimp <- function(models, model_names) {
@@ -1074,10 +999,10 @@ plot_all_varimp <- function(models, model_names) {
 
 ```
 
--   **ROC-AUC Plots:** Visualizes the trade-offs between sensitivity and
-    specificity while computing the **Area Under the Curve (AUC)**.
+ROC-AUC Plots: Visualizes the trade-offs between sensitivity and
+specificity while computing the Area Under the Curve (AUC).
 
-```{r model eval ROC-AUC, warning = FALSE, message = TRUE}
+```{r roc-auc func, warning = FALSE, message = FALSE}
 
 # Function to plot ROC with AUC and highlighted threshold point
 roc_to_df <- function(roc_obj, model_name = "Model") {
@@ -1111,44 +1036,57 @@ roc_to_df <- function(roc_obj, model_name = "Model") {
 
 ```
 
--   **Business KPIs for all the models:** An enhanced KPI function that
-    calculates multiple business-relevant metrics for all your models
-    and returns a single consolidated data frame.
+Business KPIs for all the models: To align model evaluation with
+business objectives, defined a business-relevant KPIs. This directly
+measures the predictions only on the High traffic recipes and how well a
+model supports the company’s business goals of correctly predicting High
+traffic recipes 80% of the time.
 
-```{r business KPIs, warning = FALSE, message = FALSE}
+Formulas for Model Performance Metrics:
+
+Recall High Traffic (%): Measures how effectively the model identifies
+recipes that actually receive high traffic.
+
+Recall High Traffic (%) = (True High-traffic Predictions / Total Actual
+High-Traffic Predictions) \* 100
+
+Overall Accuracy (%): Represents the percentage of total correct
+predictions (both high and low traffic).
+
+Overall Accuracy (%) = ((True High-Traffic + True Low-Traffic) / Total
+Predictions) \* 100
+
+F1 Score - High-Traffic Class: The harmonic mean of precision and recall
+for high-traffic recipes, balancing false positives and false negatives.
+
+F1 Score High Traffic = 2 \* ((Precision High Traffic \* RecallHigh
+Traffic) / (Precision High Traffic + Recall High Traffic))
+
+where, Precision High Traffic = True-High Traffic / Predicted-High
+Traffic Recall High Traffic = True-High Traffic / Actual-High Traffic
+
+```{r business kpi func, warning = FALSE, message = FALSE}
 
 # Enhanced function to compute multiple KPIs for all models
 compute_business_metrics <- function(predictions_list, true_labels, positive_class = "High") {
-  
   kpi_results <- data.frame(
     Model = character(),
-    KPI_HighTraffic = numeric(),
-    KPI_LowTraffic = numeric(),
+    Recall_High_Traffic = numeric(),
     Accuracy = numeric(),
-    F1_HighTraffic = numeric(),
+    F1_High_Traffic = numeric(),
     stringsAsFactors = FALSE
   )
   
   for(modelname in names(predictions_list)) {
     preds <- predictions_list[[modelname]]
-    
     # Ensure factor levels match
     preds <- factor(preds, levels = levels(true_labels))
-    
     # Accuracy
     accuracy <- mean(preds == true_labels) * 100
-    
-    # KPI: High traffic
+    # High traffic Recall
     high_correct <- sum(preds == positive_class & true_labels == positive_class)
     total_high <- sum(true_labels == positive_class)
     kpi_high <- (high_correct / total_high) * 100
-    
-    # KPI: Low traffic
-    low_class <- setdiff(levels(true_labels), positive_class)
-    low_correct <- sum(preds == low_class & true_labels == low_class)
-    total_low <- sum(true_labels == low_class)
-    kpi_low <- (low_correct / total_low) * 100
-    
     # F1-score for High traffic
     precision <- ifelse(sum(preds == positive_class) == 0, 0,
                         sum(preds == positive_class & true_labels == positive_class) /
@@ -1162,10 +1100,9 @@ compute_business_metrics <- function(predictions_list, true_labels, positive_cla
     # Append to results
     kpi_results <- rbind(kpi_results,
                          data.frame(Model = modelname,
-                                    KPI_HighTraffic = round(kpi_high, 2),
-                                    KPI_LowTraffic = round(kpi_low, 2),
                                     Accuracy = round(accuracy, 2),
-                                    F1_HighTraffic = round(f1_high, 2)))
+									Recall_High_Traffic = round(kpi_high, 2),
+									F1_High_Traffic = round(f1_high, 2)))
   }
   
   return(kpi_results)
@@ -1173,21 +1110,82 @@ compute_business_metrics <- function(predictions_list, true_labels, positive_cla
 
 ```
 
-In this Machine Learning Model session, the models are trained,
-evaluation metrics are calculated, and visualizations such as **variable
-importance plots** and **model-specific tree plots** are generated.
-These results will be presented in the next section, **Model Results and
-Evaluation**, where model performance, feature influence, and predictive
-accuracy will be discussed in detail.
+## Model Selection
 
-## Logistic Regression
+Model Selection To balance interpretability and performance, the
+following models were selected:
 
-Logistic Regression was implemented as the **baseline classifier** to
-model the probability of a recipe generating **High traffic** based on
-**nutrient composition, servings, and category**. The model coefficients
-provide interpretable insights into which recipe attributes favor or
-limit traffic. Performance metrics and ROC curves serve as benchmarks
-against more complex models.
+-   **Logistic Regression:** Serves as a *baseline model* to capture
+    linear relationships between recipe features and traffic.
+-   **Decision Trees:** Designed to model non-linear relationships and
+    feature interactions.
+-   **Random Forest:** An ensemble approach that improves predictive
+    accuracy while identifying important predictors.
+-   **Gradient Boosted Trees (XGBoost):** A boosting-based
+    classification method focused on minimizing misclassifications and
+    enhancing model performance.
+
+These models allow us to compare simple, interpretable models and
+complex algorithms to balance accuracy and interpretability.
+
+**Data Split and Model Training**\
+Steps included:
+
+Splitting data (70% train / 30% test) Dummy encoding categorical
+variables Normalization (centering and scaling) Model training using
+caret framework
+
+The final cleaned dataset was prepared accordingly to support machine
+learning workflows and predictive modelling. Each model was fitted on
+the training data and evaluated on the test dataset using consistent
+preprocessing.
+
+```{r data split}
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Split into training and test datasets
+train_index <- createDataPartition(recipe_clean$traffic, p = 0.7, list = FALSE)
+train <- recipe_clean[train_index, ]
+test <- recipe_clean[-train_index, ]
+
+# Dummy encoding for categorical variables
+dummies <- dummyVars(traffic ~., data = train)
+train_dummy <- predict(dummies, newdata = train)
+test_dummy <- predict(dummies, newdata = test)
+
+# Add back target column
+train_proc <- data.frame(train_dummy, traffic = train$traffic)
+test_proc <- data.frame(test_dummy, traffic = test$traffic)
+
+# PreProcessing the recipe_clean dataset for normalization across models
+preProc <- preProcess(train, method = c('center', 'scale'))
+train_final <- predict(preProc, train_proc)
+test_final <- predict(preProc, test_proc)
+
+# True labels
+true_labels <- test_final$traffic
+
+str(train_final)
+str(test_final)
+
+```
+
+## Model Fitting
+
+### Logistic Regression (Baseline Model)
+
+Logistic Regression served as the baseline model to predict High traffic
+using nutrient composition, servings, and recipe category. Coefficients
+offer clear insights into features that increase or decrease traffic.
+
+Logistic Coefficient plots,
+
+Recipe Categories: Vegetables, Potato, and Pork categories strongly
+boost website High traffic. Beverages, Breakfast, and Chicken/Chicken
+Breast show Low traffic likelihood. Nutrient Composition and Servings
+have a smaller positive effect on traffic.
 
 ```{r logistic regression, message = FALSE, warning = FALSE}
 
@@ -1208,15 +1206,25 @@ ggplot(log_coef, aes(x = reorder(term, OddsRatio),
                      fill = OddsRatio)) +
   geom_col(alpha = 0.9) +
   coord_flip() +
-  scale_fill_gradient(low = "#1b9e77", high = "#d95f02") +
-  theme_minimal(base_size = 12) +
+  scale_fill_gradient(low = "#66C2A5", high = "#A63600") +
+  theme_minimal(base_size = 14) +
   labs(title = "Logistic Regression Coefficients (Odds Ratios)",
        x = "Variable",
        y = "Odds Ratio (exp(coef))",
-       fill = "Odds Ratio")
+       fill = "Odds Ratio") +
+  theme(
+	  legend.position = "bottom",
+	  plot.title = element_text(hjust = 0.5, vjust = 1),
+	  axis.text.x = element_text(hjust = 0.5),
+	  plot.margin = ggplot2::margin(t = 20, r = 40, b = 10, l = 10))
 
 # Predict the target variable using the test data
 log_preds <- predict(log_model, test_final)
+log_probs <- predict(log_model, test_final, type = "prob")[, "High"]
+
+# ROC dataframe
+roc_log <- roc(true_labels, log_probs)
+roc_log <- roc_to_df(roc_log, "Logistic Regression")
 
 # Construct the confusion matrix
 log_cm <- caret::confusionMatrix(log_preds, test_final$traffic)
@@ -1229,38 +1237,9 @@ log_results <- get_metrics(log_cm, roc_log$auc, "Logistic Regression")
 kable(log_results, caption = "Logistic Regression Model Results") %>%
   kable_styling(full_width = F, position = "left")
 
-# ROC dataframe
-log_probs <- predict(log_model, test_final, type = "prob")[, "High"]
-roc_log <- roc(true_labels, log_probs)
-roc_log <- roc_to_df(roc_log, "Logistic Regression")
-
 ```
 
-**Insights**
-
-Performance Metrics are represented in table -
-`Logistic Regression Model Results`
-
-Logistic Regression Coefficient plot which measures the Odds Ratio of
-predicting High and low traffic based on the variables. From this plot,
-
--   **Recipe Categories:**
-    -   **Vegetables, Potato, and Pork** have high positive
-        coefficients, indicating these categories are strongly
-        associated with higher traffic.
-    -   **Beverages, Breakfast, and Chicken/Chicken Breast** have low or
-        negative coefficients, suggesting lower likelihood of attracting
-        high traffic.
--   **Nutrient Composition and Servings:**
-    -   These features have modest positive coefficients, showing a
-        slight influence on traffic, but their impact is smaller
-        compared to recipe category.
-
-These results align with the earlier **EDA and visualization insights**,
-confirming that **recipe category is the primary driver of traffic**,
-while nutrient composition and servings play a secondary role.
-
-## Decision Tree
+### Decision Tree
 
 The Decision Tree model captures **non-linear relationships and feature
 interactions** to identify which recipe attributes—such as category,
@@ -1286,6 +1265,11 @@ rpart.plot(dt_model$finalModel, type = 3,
 
 # Predict the target variable using the test data
 dt_preds <- predict(dt_model, test_final)
+dt_probs <- predict(dt_model, test_final, type = "prob")[, "High"]
+
+# ROC dataframe
+roc_dt <- roc(true_labels, dt_probs)
+roc_dt <- roc_to_df(roc_dt, "Decision Tree")
 
 # Construct the confusion matrix
 dt_cm <- caret::confusionMatrix(dt_preds, test_final$traffic)
@@ -1298,10 +1282,6 @@ dt_results <- get_metrics(dt_cm, roc_dt$auc, "Decision Tree")
 kable(dt_results, caption = "Decision Tree Model Results") %>%
   kable_styling(full_width = F, position = "left")
 
-# ROC dataframe
-dt_probs <- predict(dt_model, test_final, type = "prob")[, "High"] # for ROC curve
-roc_dt <- roc(true_labels, dt_probs)
-roc_dt <- roc_to_df(roc_dt, "Decision Tree")
 
 ```
 
@@ -1322,17 +1302,19 @@ Overall, the Decision Tree confirms that **category dominates as a
 predictor**, with servings and nutrient content providing additional,
 secondary distinctions in traffic prediction.
 
-## Random Forest
+### Random Forest
 
-Random Forest extends the Decision Tree approach by creating an
-**ensemble of trees** to capture non-linear relationships and
-interactions among recipe features. It improves predictive accuracy
-while providing **feature importance scores** to identify which
-nutrients or attributes most strongly influence traffic.
+Random Forest (Comparative Model) Random Forest uses an ensemble of
+trees to model non-linear relationships and feature interactions,
+improving accuracy.
+
+Tree plot shows recipe category as the top predictor; Beverages indicate
+Low traffic, while other splits highlight traffic categories and portion
+sizes.
 
 ```{r rf model, message = FALSE, warning = FALSE}
 
-# Building the logistic regression model
+# Building the random forest model
 rf_model <- train(traffic ~ ., data = train_final,
                   method = 'rf', 
                   trControl = trainControl(
@@ -1345,13 +1327,17 @@ tree_rpart <- rpart(traffic ~ ., data = train_final, method = "class")
 
 rpart.plot(tree_rpart, type = 3, 
            extra = 104, fallen.leaves = TRUE,
-           cex = 1, box.col = c("lightgreen", "orange"),
-           border.col = "black", shadow.col = "gray",
+           cex = 1, border.col = "black", shadow.col = "gray",
            under = TRUE, branch.lty = 1,
            main = "Random Forest - Example Tree")
 
 # Predict the target variable using the test data
 rf_preds <- predict(rf_model, test_final)
+rf_probs <- predict(rf_model, test_final, type = "prob")[, "High"]
+
+# ROC dataframe
+roc_rf <- roc(true_labels, rf_probs)
+roc_rf <- roc_to_df(roc_rf, "Random Forest")
 
 # Construct the confusion matrix
 rf_cm <- caret::confusionMatrix(rf_preds, test_final$traffic)
@@ -1359,32 +1345,15 @@ rf_cm <- caret::confusionMatrix(rf_preds, test_final$traffic)
 # Plotting the confusion matrix
 plot_rf <- plot_cm(rf_cm, "Random Forest")
 
-# Logistic regression model results
+# Random forest model results
 rf_results <- get_metrics(rf_cm, roc_rf$auc, "Random Forest")
 
 # Print the results
 kable(rf_results, caption = "Random Forest Model Results") %>%
   kable_styling(full_width = F, position = "left")
 
-# ROC dataframe
-rf_probs <- predict(rf_model, test_final, type = "prob")[, "High"] # for ROC curve
-roc_rf <- roc(true_labels, rf_probs)
-roc_rf <- roc_to_df(roc_rf, "Random Forest")
 
 ```
-
-**Insights**
-
--   Performance Metrics are represented in table -
-    `Random Forest Model Results`
--   **Feature Influence:**
-    -   The overview of tree splits begins with **Beverages**, which is
-        associated with low traffic, followed by splits on other
-        categories, servings, and nutrient variables.
-
-    -   **Recipe category remains the most influential predictor**,
-        while nutrient composition and serving size contribute to finer
-        distinctions in traffic outcomes.
 
 ## XGB Boost
 
@@ -1410,6 +1379,11 @@ xgb.plot.tree(model = xgb_model$finalModel, trees = 3,
 
 # Predict the target variable using the test data
 xgb_preds <- predict(xgb_model, test_final)
+xgb_probs <- predict(xgb_model, test_final, type = "prob")[, "High"]
+
+# ROC dataframe
+roc_xgb <- roc(true_labels, xgb_probs)
+roc_xgb <- roc_to_df(roc_xgb, "Random Forest")
 
 # Construct the confusion matrix
 xgb_cm <- caret::confusionMatrix(xgb_preds, test_final$traffic)
@@ -1423,11 +1397,6 @@ xgb_results <- get_metrics(xgb_cm, roc_xgb$auc, "XGB Boost")
 # Print the results
 kable(xgb_results, caption = "XGB Boost Model Results") %>%
   kable_styling(full_width = F, position = "left")
-
-# ROC dataframe
-xgb_probs <- predict(xgb_model, test_final, type = "prob")[, "High"] 
-roc_xgb <- roc(true_labels, xgb_probs)
-roc_xgb <- roc_to_df(roc_xgb, "XGB Boost")
 
 ```
 
@@ -1446,21 +1415,32 @@ roc_xgb <- roc_to_df(roc_xgb, "XGB Boost")
 
 # Model Results and Evaluation
 
-The machine learning models were evaluated using **confusion matrices,
-performance metrics, feature importance, and ROC-AUC curves** to compare
-their ability to predict High vs. Low recipe traffic.
+The machine learning models were evaluated using confusion matrices,
+performance metrics, feature importance, and ROC-AUC curves to compare
+their ability to predict High vs Low recipe traffic.
 
 ## Confusion Matrix & Model Metrics Comparison
 
-Confusion matrices summarize correct and incorrect predictions for each
-model, providing a clear view of their classification strengths:
+Confusion matrices highlight each model’s ability to correctly classify
+both High and Low traffic recipes:
+
+Model Performance Summary:
+
+Logistic Regression: Achieves the best balance, with 74.6% accuracy and
+good detection of high-traffic recipes. Random Forest: Random Forest has
+slightly lower accuracy (72.4%) and misses more high-traffic recipes
+while predicting low-traffic recipes more reliably. Overall Insights:
+
+Logistic Regression provides the most balanced and interpretable
+performance. Random Forest favors low-traffic predictions at the cost of
+detecting high-traffic recipes.
 
 ```{r confusion matrix, warning = FALSE, message = FALSE}
 
 # Combine all confusion matrices
-all_cm <- bind_rows(plot_log, plot_dt, plot_rf, plot_xgb)
+all_cm <- bind_rows(plot_log, plot_rf)
 
-# Optional: convert Prediction & Reference to factors with consistent levels
+# Convert Prediction & Reference to factors with consistent levels
 levels_order <- c("Low", "High")
 all_cm <- all_cm %>%
   mutate(
@@ -1476,37 +1456,25 @@ all_cm <- all_cm %>%
   ))
 
 # Plot confusion matrices with labels
-ggplot(all_cm, aes(x = Reference, y = Prediction, fill = Frequency)) +
+all_cm_plot <- ggplot(all_cm, aes(x = Reference, y = Prediction, fill = Frequency)) +
   geom_tile(color = "white") +
   geom_text(aes(label = paste0(Frequency, "\n", Label)), color = "black", size = 3) +
-  scale_fill_gradient(low = "#1b9e77", high = "#d95f02") +
-  theme_minimal() +
-  facet_wrap(~Model, ncol = 2, scales = "fixed") +  # fixed axes
-  labs(title = "Confusion Matrices Across Models", fill = "Count") +
+  scale_fill_gradient(low = "#66C2A5", high = "#A63600") +
+  theme_minimal(base_size= 14) +
+  facet_wrap(~Model, ncol = 2, scales = "fixed") +  
+  labs(title = "Confusion Matrices", fill = "Count") +
   theme(
-    plot.title = element_text(hjust = 0.5),
-    axis.text.x = element_text(angle = 45, hjust = 1))
+	  legend.position = "bottom",
+	  plot.title = element_text(hjust = 0.5, vjust = 2),
+	  axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+	  plot.margin = ggplot2::margin(t = 10, r = 20, b = 10, l = 10)) 
 
-```
+all_cm_plot
 
-**Insights**
+# Creating the model metric data frame
+combined_results <- bind_rows(log_results, rf_results)
 
--   **Logistic Regression:** Balanced performance, correctly identifying
-    a majority of high-traffic recipes while maintaining high
-    specificity for low-traffic recipes.
--   **Decision Tree:** Shows strong specificity (86.6%) but lower recall
-    (48.6%), indicating the model favors identifying low-traffic recipes
-    accurately but misses some high-traffic ones.
--   **Random Forest:** Achieves a better balance between precision
-    (70.2%) and recall (53.2%), improving overall classification for
-    both traffic classes.
--   **XGBoost:** Similar to Random Forest, with slightly higher
-    precision (70.4%) and balanced sensitivity and specificity.
-
-```{r model results, warning = FALSE, message = FALSE}
-
-combined_results <- bind_rows(log_results, dt_results, rf_results, xgb_results)
-
+# Transposing the combined results dataframe
 model_results <- combined_results %>%
   select(-Model) %>%
   t() %>%
@@ -1515,140 +1483,109 @@ model_results <- combined_results %>%
 
 # Round only numeric columns
 model_results[, -1] <- round(model_results[, -1], 3)
-
 colnames(model_results)[-1] <- combined_results$Model
 
-kable(model_results, caption = "Model Results") %>%
-  kable_styling(full_width = F, position = "left")
-
+# Data frame to compare all the model results for comparison
+model_results
 ```
-
-Based on the model metrics,
-
--   Logistic Regression and Random Forest achieve the highest **overall
-    accuracy** (72.8%), with Logistic Regression showing the best
-    **ROC-AUC** (0.801).
--   Decision Tree has the highest **specificity** (86.6%) but lower
-    recall, indicating it better predicts low-traffic recipes than
-    high-traffic ones.
--   Ensemble models (Random Forest and XGBoost) balance precision and
-    recall better than a single Decision Tree, providing robust
-    predictions.
 
 ## Variable Importance Plots
 
-The **scaled variable importance plot** compares how each model
-(Decision Tree, Logistic Regression, Random Forest, XGBoost) evaluates
-the influence of recipe features on predicting **High vs. Low traffic**:
+The scaled variable importance plot compares how Logistic Regression and
+Random Forest evaluates the influence of recipe features on predicting
+High vs. Low traffic:
+
+Recipe Category:
+
+The dominant predictor for traffic in the models, consistent with EDA
+findings. High traffic: Vegetables, Potato and Pork. Low traffic:
+Beverages, Breakfast, and Chicken. Nutrient Composition:
+
+Secondary influence. Protein: Some importance in Random Forest.
+Carbohydrates, Calories, Sugar: Relatively low impact. Servings:
+
+Minimal importance, confirming limited effect on traffic compared to
+category and nutrients. Consistency Across Models:
+
+Overall, the variable importance plots show a consistent pattern where
+category-related features hold the highest influence for predictions,
+while nutrient-based variables also contribute notably to model
+predictions, though with varying degrees of importance.
 
 ```{r var imp plot, warning = FALSE, message = FALSE}
 
 # Creating data frame to plot all the variable importance
 varimp_df <- plot_all_varimp(
-  models = list(log_model, rf_model, xgb_model, dt_model),
-  model_names = c("Logistic Regression", "Random Forest", "XGBoost", "Decision Tree"))
+  models = list(log_model, rf_model),
+  model_names = c("Logistic Regression", "Random Forest"))
 
 # Apply the variable importance function
 ggplot(varimp_df, aes(x = reorder(Variable, Importance),
                       y = Importance,
                       fill = Model)) +
   geom_col(position = position_dodge(width = 0.9), 
-           width = 0.7, alpha = 0.8) +
+           width = 0.7, alpha = 0.8, show.legend = FALSE) +
   coord_flip() +
-  
-  # Add spacing between variables
   scale_x_discrete(expand = expansion(mult = c(0.05, 0.05))) +
-  scale_fill_brewer(palette = "Dark2") +
-
+  scale_fill_manual(values = c("Logistic Regression" = "#66C2A5",
+							   "Random Forest" = "#A63600")) +
   facet_wrap(~Model, scales = "fixed") +
-
-  # Styling
   theme_minimal(base_size = 14) +
   theme(
-    axis.text.y  = element_text(size = 10, hjust = 1),
+    axis.text.y  = element_text(size = 10, hjust = 1,face = "bold"),
     axis.text.x  = element_text(size = 10),
     axis.title   = element_text(size = 12, face = "bold"),
     legend.title = element_text(size = 11),
     legend.text  = element_text(size = 10),
-    panel.grid.major.y = element_blank(),  # removes y gridlines between bars
+    panel.grid.major.y = element_blank(),  
     plot.title   = element_text(size = 16, face = "bold", hjust = 0.5)
   ) +
   labs(title = "Scaled Variable Importance Across Models",
        x = "Variable",
        y = "Scaled Importance (0–100)") +
   theme_minimal(base_size = 14) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, size = 10),
-        plot.title = element_text(hjust = 0.5))
+  theme(
+	  plot.title = element_text(hjust = 0.5, vjust = 2),
+	  axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+	  plot.margin = ggplot2::margin(t = 20, r = 40, b = 10, l = 10)) 
 
 ```
-
-**Insights**
-
-**Recipe Category Dominates Traffic Prediction:**
-
--   Across all four models, **category variables** are clearly the most
-    important predictors.
--   Specifically:
-    -   **Vegetables and Potato** have stronger predictive power for
-        **`High`** traffic.
-
-    -   **Beverages, Breakfast, and Chicken** appear frequently but are
-        **less informative** for predicting high traffic, reflecting
-        **`Low`** traffic, which aligns with EDA observations.
-
-**Nutrient Composition (Protein, Carbohydrates, Calories, Sugar):**
-
--   **Protein** shows some importance, especially in Decision Tree and
-    Random Forest models, but it is still secondary to category.
--   **Carbohydrates, calories, and sugar** have relatively low
-    importance in all models, indicating that while nutrient content
-    contributes slightly, it is not a primary driver of traffic.
-
-**Servings:**
-
--   Shows minimal importance across all models, confirming that serving
-    size alone has little impact on recipe traffic compared to category
-    and nutrient composition.
-
-**Consistency Across Models:**
-
--   **Random Forest and XGBoost** emphasize category features most
-    strongly, reflecting their ensemble nature and ability to capture
-    interactions.
--   **Logistic Regression** also ranks categories highest, although with
-    slightly more spread across nutrients.
--   **Decision Tree** highlights similar patterns but shows slightly
-    higher weighting for protein and a few other nutrient variables,
-    reflecting single-tree splits.
 
 ## ROC_AUC Plots
 
 ROC-AUC analysis validated the trade-offs in model sensitivity and
 specificity.
 
+Logistic Regression: Highest AUC (0.803), effectively separating High
+and Low traffic recipes.
+
+Random Forest: Slightly lower AUC (0.779), with a tendency to predict
+Low traffic recipes more reliably but missing some High traffic ones.
+
 ```{r ROC results, warning = FALSE. message = FALSE}
 
 # Combine ROC curves and threshold points from multiple models
-all_roc_df <- bind_rows(roc_log$roc_df, roc_dt$roc_df, roc_rf$roc_df, roc_xgb$roc_df)
-all_point_df <- bind_rows(roc_log$point_df, roc_dt$point_df, roc_rf$point_df, roc_xgb$point_df)
+all_roc_df <- bind_rows(roc_log$roc_df, roc_rf$roc_df)
+all_point_df <- bind_rows(roc_log$point_df, roc_rf$point_df)
 
 # Add label column for unified legend
 all_roc_df <- all_roc_df %>%
-  mutate(Label = paste0(Model, " (AUC=", round(AUC, 3), ")"))
+  mutate(Label = paste0(Model, " (AUC = ", round(AUC, 3), ")"))
 
 all_point_df <- all_point_df %>%
   left_join(all_roc_df %>% distinct(Model, Label), by = "Model")
 
 # Plot
-ggplot(all_roc_df, aes(x = FPR, y = TPR, color = Label)) +
-  geom_line(size = 1) +
-  geom_point(data = all_point_df, aes(x = FPR, y = TPR, color = Label), size = 3) +
+plot_roc <- ggplot(all_roc_df, aes(x = FPR, y = TPR, color = Label)) +
+  geom_line(linewidth = 1) +
+  geom_point(data = all_point_df, aes(x = FPR, y = TPR, color = Label), size = 5) +
   geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "gray") +
   facet_wrap(~Model) +
-  scale_color_brewer(palette = "Dark2") +
-  theme_minimal() +
+  scale_color_manual(values = c("Logistic Regression (AUC = 0.803)" = "#66C2A5",
+							   "Random Forest (AUC = 0.779)" = "#A63600")) +
+  theme_minimal(base_size = 14) +
   labs(
-    title = "ROC Curves Across Models",
+    title = "ROC Curves with Threshold points",
     x = "False Positive Rate (1 - Specificity)",
     y = "True Positive Rate (Sensitivity)",
     color = "Model (AUC)"
@@ -1656,26 +1593,15 @@ ggplot(all_roc_df, aes(x = FPR, y = TPR, color = Label)) +
   theme(
     legend.position = "bottom",
     legend.box = "horizontal",
-    legend.title = element_text(size = 8),
-    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10),
     legend.key.width = unit(1.2, "cm"),
     legend.spacing.x = unit(0.6, "cm"),
-    axis.text = element_text(size = 8),
-    axis.title = element_text(size = 8),
-    plot.title = element_text(hjust = 0.5)) +
-  guides(color = guide_legend(nrow = 2, byrow = TRUE))
+    plot.title = element_text(hjust = 0.5),
+	plot.margin = ggplot2::margin(t = 20, r = 40, b = 10, l = 10))
+
+plot_roc 
 
 ```
-
-**Insights**
-
--   **Logistic Regression:** Achieves the highest AUC (0.801),
-    indicating strong distinction between high and low traffic recipes.
--   **Random Forest and XGBoost:** Slightly lower AUCs (0.775 and
-    0.781), but maintain better balance between precision and recall.
--   **Decision Tree:** Lower AUC (0.686), reflecting weaker overall
-    discrimination, though its interpretability remains useful for
-    understanding feature splits.
 
 ## Model Results Summary
 
@@ -1688,81 +1614,46 @@ interpretable insights but slightly lower predictive performance. These
 results validate the EDA findings and support data-driven optimization
 of recipe recommendations on Tasty Bytes.
 
-## Business Evaluation: Tasty Bytes Recipe Traffic Prediction
+## Business Focus and Metric Evaluation: Tasty Bytes High Recipe Website Traffic Prediction
 
 ### Business Focus
 
-The primary goal for Tasty Bytes is to increase user engagement by
-effectively identifying and promoting recipes that are likely to attract
-high website traffic. By predicting recipe popularity using machine
-learning, the company can:
-
-Highlight high-traffic recipes on the homepage and recommendation
-sections.
-
-Strategically plan marketing campaigns around popular recipes.
-
-Detect under performing recipes to improve content quality and optimize
-user appeal.
-
-This project addresses these goals by developing multiple predictive
-models based on recipe attributes such as category, servings, and
-nutrient composition. The insights generated help Tasty Bytes align its
-content strategy with user preferences and platform engagement trends.
+Tasty Bytes aims to boost user engagement by accurately identifying and
+promoting recipes that drive High website traffic at least 80% of the
+time.
 
 ### Business Criteria and KPI
 
-To align model evaluation with business objectives, we defined a
-business-relevant KPI:
+To evaluate models in line with business objectives which only focuses
+on predicting High traffic recipes, we defined business-relevant KPIs:
 
-**Formulas for Model Performance Metrics**
+Recall High Traffic (%): Measures how effectively the model identifies
+recipes that actually receive High traffic. Overall Accuracy (%):
+Represents the percentage of total correct predictions - High traffic
+recipe. F1 Score High Traffic: The harmonic mean of precision and recall
+for High traffic recipes, balancing false positives and false negatives.
+Higher KPI values indicate stronger alignment with user engagement,
+supporting Tasty Bytes in prioritizing recipes that truly resonate with
+the audience.
 
--   **KPI - High-Traffic Prediction (%)**
+### Business Metric Results
 
-    Measures how effectively the model identifies recipes that actually
-    receive high traffic.
+All models successfully met Tasty Bytes’ goal of correctly predicting
+High traffic recipes, with Recall High Traffic (%) above 80%.
 
-    -   **KPI ~High\ Traffic~ (%)** = (True High-traffic Predictions /
-        Total Actual High-Traffic Predictions) \* 100
+High Traffic Recall: Random Forest leads slightly at 86.6%, followed by
+Logistic Regression at 83.1%, ensuring the majority of High traffic
+recipes are correctly identified for the homepage. Overall Accuracy:
+Logistic Regression achieves the highest overall accuracy (74.6%),
+providing the most reliable general predictions. F1 Score High Traffic:
+Both models show balanced performance (0.79 – 0.80), indicating
+consistent precision and recall in identifying high-traffic recipes. Key
+Insights:
 
--   **KPI - Low Traffic Predictions (%)**
-
-    Measures how accurately the model predicts recipes with low user
-    traffic.
-
-    -   **KPI ~Low\ Traffic~ (%)** = (True Low-traffic predictions /
-        Total Actual Low-Traffic Predictions) \* 100
-
--   **Overall Accuracy (%)**
-
-    Represents the percentage of total correct predictions (both high
-    and low traffic).
-
-    -   **Overall Accuracy (%)** = ((True High-Traffic + True
-        Low-Traffic) / Total Predictions) \* 100
-
--   **F1 Score - High-Traffic Class**
-
-    The harmonic mean of precision and recall for high-traffic recipes,
-    balancing false positives and false negatives.
-
-    -   **F1 Score ~High\ Traffic~** = 2 \* ((Precision ~High\ Traffic~
-        \* Recall~High\ Traffic~) / (Precision ~High\ Traffic~ + Recall
-        ~High\ Traffic~))
-
--   where,
-
-    -   **Precision ~High\ Traffic~** = True-High Traffic /
-        Predicted-High Traffic
-    -   **Recall ~High\ Traffic~** = True-High Traffic / Actual-High
-        Traffic
-
-This metric directly measures how effectively a model identifies recipes
-that truly resonate with users — a crucial business driver for Tasty
-Bytes. A higher KPI value indicates stronger alignment between the
-model’s predictions and actual user engagement behavior.
-
-### Model Comparison Using Business Metrics
+Logistic Regression offers the most balanced and interpretable
+predictions, while Random Forest slightly better captures high-traffic
+recipes, supporting Tasty Bytes’ goal of featuring the most engaging
+recipes to boost user traffic.
 
 ```{r business KPI result, warning = FALSE, message = FALSE}
 
@@ -1783,164 +1674,144 @@ business_metrics_df <- compute_business_metrics(predictions_list, true_labels)
 kable(business_metrics_df, caption = "Business KPIs Results") %>%
   kable_styling(full_width = F, position = "left")
 
+# Data visuals
+plot_df <- business_metrics_df %>%
+  select(Model, Accuracy, Recall_High_Traffic, F1_High_Traffic) %>%
+  pivot_longer(cols = -Model, names_to = "Metric", values_to = "Value") %>%
+  mutate(Metric = factor(
+	  Metric, levels = c("Accuracy", "Recall_High_Traffic", "F1_High_Traffic")),
+		 Model = factor(
+	  Model, levels = c("Logistic Regression", "Random Forest"))) %>%
+  ggplot(aes(x = Model, y = Value, fill = Metric)) +
+  geom_col(position = position_dodge(width = 0.8)) +
+  geom_text(aes(label = round(Value, 2)), 
+            position = position_dodge(width = 0.8), vjust = -0.5, size = 3) +
+  facet_wrap(~Metric, scales = 'free_y') +
+  scale_fill_manual(values = c(
+	  "Accuracy"            = "#66C2A5",
+	  "Recall_High_Traffic" = "#A63600",
+	  "F1_High_Traffic"     = "orange"
+  )) +
+  labs(
+    title = "Model Comparison Across Business Metrics",
+    x = "Model",
+    y = "Value"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(angle = 20, hjust = 0.5),
+    plot.title = element_text(hjust = 0.5), 
+    legend.position = "none",
+  )
+
+plot_df
+
 ```
-
-**Insights:**
-
--   Random Forest achieves the highest High-Traffic KPI (72%) and strong
-    overall accuracy, making it the most suitable model for recipe
-    recommendation and promotion.
--   XGBoost performs closely behind with strong balance between
-    precision and recall, showing potential for further tuning.
--   Logistic Regression provides a stable baseline but tends to
-    underpredict high-traffic recipes.
--   Decision Tree offers interpretability, though at the cost of
-    slightly lower performance.
-
-### Business Recommendations
-
-1.  Deploy the Random Forest model for production use in recipe
-    promotion and recommendation systems.
-    -   Its superior High-Traffic KPI ensures Tasty Bytes can
-        confidently highlight recipes that attract more engagement.
-2.  Prioritize features driving high traffic, including:
-    -   Recipe categories: Vegetable, Potato, and Pork
-    -   Serving size: 4 servings
-    -   Balanced nutrient composition (moderate calories, higher protein
-        content)
-3.  Continuously monitor the KPI_HighTraffic metric to track performance
-    and ensure consistency with real-world engagement data.
-4.  Iteratively retrain models with updated user interaction data to
-    refine predictions and maintain alignment with evolving user tastes.
-
-### Business KPI Summary:
-
-By integrating business-driven evaluation metrics into the model
-comparison, this analysis ensures that predictive modeling directly
-supports Tasty Bytes’ strategic goal:
-
-***"Maximizing recipe visibility and user engagement through accurate
-traffic prediction."***
-
-Among all tested models, Random Forest demonstrates the strongest
-business value — reliably identifying high-traffic recipes and guiding
-actionable decisions for marketing, recommendation, and content
-optimization.
-
-This alignment of data science outcomes with business KPIs enables Tasty
-Bytes to make data-informed, engagement-focused strategic decisions.
 
 # Conclusion and Recommendations
 
 ## Conclusion {#conclusion}
 
-The machine learning analysis confirms that **recipe category** is the
-strongest determinant of traffic on Tasty Bytes. Recipes from
-**Vegetable**, **Potato**, and **Pork** categories consistently attract
-higher user engagement, while **Beverages**, **Breakfast**, and
-**Chicken** categories receive comparatively lower traffic. **Nutrient
-composition** (protein, carbohydrates, calories, and sugar) and
-**serving size** further influence recipe popularity, with **4-serving
-recipes** showing the highest engagement levels.
+Project Goal
 
-**From a model performance perspective:**
+The main objective was to predict which recipes are likely to generate
+high website traffic, achieving at least 80% accuracy in identifying
+high-traffic recipes. This enables data-driven homepage selection to
+boost user engagement and subscriptions.
 
--   **Logistic Regression** delivers the highest **ROC-AUC (0.801)**,
-    serving as a reliable baseline for distinguishing between high and
-    low traffic recipes.
--   **Random Forest** and **XGBoost** achieve the best **balance between
-    precision and recall**, making them effective for both classes of
-    traffic prediction.
--   **Decision Tree** provides clear interpretability but exhibits lower
-    recall, favoring precise identification of low-traffic recipes.
+Project Outcome
 
-**Business KPI Insights**
+The Tasty Bytes project successfully developed predictive models —
+Logistic Regression and Random Forest — that accurately identify
+high-traffic recipes based on category, nutrient composition, and
+serving size. Both models exceeded the 80% Recall High Traffic business
+KPI, providing a reliable foundation for evidence-based homepage recipe
+selection.
 
-To align analytical performance with Tasty Bytes’ business objectives of
-maximizing recipe engagement, we evaluated all models using the
-**High-Traffic KPI**—the percentage of correctly predicted high-traffic
-recipes.
+Key Findings:
 
--   **Random Forest** achieved the highest **High-Traffic KPI (72%)**
-    and strong overall accuracy, confirming its suitability for recipe
-    recommendation and promotional decision-making.
--   **XGBoost** followed closely, maintaining a balanced trade-off
-    between precision and recall, making it promising for future
-    optimization.
--   **Logistic Regression** performed consistently as a baseline but
-    slightly underpredicted high-traffic recipes.
--   **Decision Tree**, while interpretable, offered marginally lower
-    performance compared to ensemble models.
+Traffic Prediction Drivers:
 
-These business-driven metrics ensure that model success directly
-supports Tasty Bytes’ strategic goal —
+Recipe category remains the strongest predictor:
 
-> **“Maximizing recipe visibility and user engagement through accurate
-> traffic prediction.”**
+High traffic: Vegetables, Potato, and Pork recipes Low traffic:
+Beverages, Breakfast, and Chicken recipes Nutrient per serving
+composition (protein, carbohydrates, calories, sugar) and serving size
+have secondary influence, ensuring fair comparison across different
+serving sizes.
 
-## Recommendations and Next Steps
+Model Performance in relation to the Business goals:
 
-Based on the model results and insights from Tasty Bytes predictive
-analysis, the following recommendations and next steps are proposed to
-optimize user engagement and support data-driven decision-making.
+Both models developed in the project achieved the business goal of
+correctly predicting High traffic recipes with over 80% Recall High
+Traffic KPI predictions.
+
+Random Forest: Provides the most consistent and reliable High traffic
+recipes, exceeding the 80% target for correctly identifying High traffic
+recipes. Logistic Regression: Offers the highest interpretability and
+overall accuracy, helping explain which features influence recipe
+popularity. These results demonstrate that recipe popularity and user
+engagement can now be quantitatively predicted. By leveraging these
+models, Tasty Bytes can confidently choose homepage recipes that are
+most likely to attract users, thereby maximizing traffic and
+subscriptions in a measurable, repeatable way.
+
+Overall
+
+Recipe category is the dominant driver of website traffic. Logistic
+Regression provides interpretability and reliable overall predictions,
+while Random Forest slightly better identifies high-traffic recipes,
+directly supporting Tasty Bytes’ objective of featuring High traffic
+recipes to drive user engagement and subscriptions.
 
 ## Recommendations
 
-1.  **Category-Focused Content Strategy**\
-    Prioritize recipe development and promotion in **high-traffic
-    categories** such as *Vegetables, Potato,* and *Pork* to sustain and
-    enhance user engagement.
-2.  **Deploy Ensemble Models for Prediction**\
-    Implement the **Random Forest** model in production for recipe
-    recommendation and traffic prediction.
-3.  Its superior **High-Traffic KPI (72%)** ensures reliable
-    identification of recipes that will attract more engagement.
-4.  **XGBoost** can be maintained as a secondary model for
-    experimentation and future scaling.
-5.  **Refine Lower-Traffic Categories**\
-    For underperforming categories (*Beverages, Breakfast, Chicken*),
-    explore targeted improvements such as:
-    -   Highlighting nutritional benefits
-    -   Repackaging content
-    -   Introducing category crossovers (e.g., “High-Protein Breakfast”)
-6.  **Nutrient-Driven Personalization**\
-    Leverage nutrient composition insights (especially **protein-rich**
-    and **balanced-calorie** recipes) for personalized recommendations
-    and health-focused campaigns.
-7.  **Data-Driven Marketing and UX Optimization**\
-    Use model outputs to:
-    -   Dynamically highlight predicted high-traffic recipes on the
-        homepage
-    -   Drive **push notifications** and **email campaigns** for
-        trending recipes
-    -   Optimize recipe layout and content positioning to increase
-        visibility
-8.  **Monitor and Retrain Models**\
-    Continuously monitor key metrics — **KPI_HighTraffic**,
-    **Accuracy**, and **AUC** — to ensure ongoing alignment with user
-    engagement trends. Retrain models periodically using updated traffic
-    and user interaction data to maintain accuracy and business
-    relevance.
+Based on the modelling results and alignment with the client’s business
+objectives, the following actions are recommended:
+
+Deploy Best Models: Both models can be used for daily homepage recipe
+selection, as they consistently exceed the 80% Recall High Traffic
+Business KPI. Random Forest is preferred for operational use, as it
+captures slightly more High traffic recipes than Logistic Regression.
+Maintain Interpretability: Include Logistic Regression insights to
+explain which features drive recipe popularity. Prioritize Popular
+Recipes: Feature Vegetable, Potato, and Pork recipes to maximize user
+engagement. Improve Low-Traffic Recipes: Develop promotional or
+nutritional storytelling campaigns to raise visibility for Breakfast,
+Beverages, and Chicken recipes, which currently attract lower traffic.
+Use Nutrient Insights: Emphasize balanced nutrient profiles to appeal to
+health-conscious users.
+
+## Limitations
+
+While the project aligns closely with the client’s goals, several
+limitations should be noted:
+
+Limited Feature Set: Only recipe category, nutrients, and serving size
+were used. Adding ratings, prep time, visuals, or seasonal appeal could
+improve predictions. Imputed Data: Missing traffic and nutrient values
+were filled using logical imputation, which may introduce minor bias.
+Generalization Limits: Some categories or seasonal recipes may be
+underrepresented, affecting performance on new recipes. Model
+Interpretability vs Accuracy: Random Forest is less interpretable than
+Logistic Regression. Scope of Predictions: Current predictions classify
+recipes as high or low traffic only, without measuring deeper engagement
+indicators (e.g., dwell time, repeat visits, conversions).
 
 ## Next Steps
 
-1.  **Integrate Predictive Models into the Tasty Bytes Platform**\
-    Deploy the **Random Forest** model for live recipe recommendations,
-    enabling real-time prediction of potential traffic levels for new
-    and updated recipes.
-2.  **Establish KPI-Based Monitoring Dashboard**\
-    Develop a tracking dashboard to visualize **High-Traffic KPI
-    trends** and monitor model drift, ensuring business goals are
-    consistently met.
-3.  **Expand Feature Set**\
-    Incorporate additional predictors such as:
-    -   User ratings and comments
-    -   Seasonal and temporal trends
-    -   Preparation time and ingredient availability
-4.  **Conduct A/B Testing for Content Strategy**\
-    Run controlled experiments promoting high-traffic categories to
-    measure uplift in total engagement and recipe views.
-5.  **Refine Engagement Strategies for Low-Traffic Segments**\
-    Apply insights from the models to redesign campaigns targeting
-    underperforming recipe types, improving inclusivity and audience
-    reach.
+To improve the model accuracy and strengthen the link between
+predictions and business outcomes, the following steps are advised:
+
+Track Real-World Performance: Continuously monitor accuracy, F1 score,
+and Recall High Traffic rate to ensure the models maintain reliability
+in live deployment. Refine Success Metrics: Expand business KPIs beyond
+traffic — include click-through rate, conversion rate, and subscription
+uplift — to quantify the true impact on company growth. Retrain and
+Optimize Models: Update models regularly with new data to reflect
+changing trends. Feature Expansion: Incorporate seasonality, user
+engagement, preparation difficulty, and visual appeal. A/B Test Homepage
+Strategies: Compare model-driven selections with manual selections to
+measure improvements. Continuous Business Alignment: Ensure ongoing
+collaboration between data science and marketing teams to apply model
+insights effectively.
