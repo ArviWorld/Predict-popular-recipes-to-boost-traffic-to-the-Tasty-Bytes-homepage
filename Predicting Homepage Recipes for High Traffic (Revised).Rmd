@@ -308,7 +308,7 @@ Out of 947 rows,
 ```{r missing values summary, warning = FALSE, message = FALSE}
 
 # Check for duplicate values
-duplicate_values <- sum(duplicated(recipe_df))
+duplicate_vals <- sum(duplicated(recipe_df))
 cat("Number of duplicate values:", duplicate_vals, "\n")
 
 # Check for the Unique recipe category values
@@ -435,7 +435,7 @@ kable(head(recipe_df), caption = "Distribution of Missing values - Recipe Datase
 # Imputing all the high_traffic NAs with `Low`
 recipe_clean <- recipe_df %>%
   mutate(traffic = factor(
-    if_else(is.na(traffic), "Low", traffic),
+    if_else(is.na(high_traffic), "Low", high_traffic),
     levels = c("Low", "High")))
 
 # Imputing the missing values in the servings and nutrient composition of the category
@@ -502,7 +502,7 @@ outlier_summary <- function (x) {
 
 # Apply this function to each numeric column
 outlier_table <- lapply(recipe_clean %>% select(nutrient_vars_per_serving), outlier_summary) 
-names(outlier_table) <- colnames(recipe_clean %>% select(nutrient_vars))
+names(outlier_table) <- colnames(recipe_clean %>% select(nutrient_vars_per_serving))
 
 # Combine the results into a single data frame
 outlier_table <- bind_rows(outlier_table, .id = "nutrients")
@@ -1502,7 +1502,7 @@ detecting high-traffic recipes.
 ```{r confusion matrix, warning = FALSE, message = FALSE}
 
 # Combine all confusion matrices
-all_cm <- bind_rows(plot_log, plot_rf)
+all_cm <- bind_rows(plot_log, plot_dt, plot_rf, plot_xgb)
 
 # Convert Prediction & Reference to factors with consistent levels
 levels_order <- c("Low", "High")
@@ -1536,7 +1536,7 @@ all_cm_plot <- ggplot(all_cm, aes(x = Reference, y = Prediction, fill = Frequenc
 all_cm_plot
 
 # Creating the model metric data frame
-combined_results <- bind_rows(log_results, rf_results)
+combined_results <- bind_rows(log_results, dt_results, rf_results, xgb_results)
 
 # Transposing the combined results dataframe
 model_results <- combined_results %>%
@@ -1586,7 +1586,7 @@ predictions, though with varying degrees of importance.
 
 # Creating data frame to plot all the variable importance
 varimp_df <- plot_all_varimp(
-  models = list(log_model, rf_model),
+  models = list(log_model, dt_model, rf_model, xgb_model),
   model_names = c("Logistic Regression", "Random Forest"))
 
 # Apply the variable importance function
@@ -1635,8 +1635,8 @@ specificity.
 ```{r ROC results, warning = FALSE. message = FALSE}
 
 # Combine ROC curves and threshold points from multiple models
-all_roc_df <- bind_rows(roc_log$roc_df, roc_rf$roc_df)
-all_point_df <- bind_rows(roc_log$point_df, roc_rf$point_df)
+all_roc_df <- bind_rows(roc_log$roc_df, roc_dt$roc_df, roc_rf$roc_df, roc_xgb$roc_df)
+all_point_df <- bind_rows(roc_log$point_df, roc_dt$point_df, roc_rf$point_df, roc_xgb$point_df)
 
 # Add label column for unified legend
 all_roc_df <- all_roc_df %>%
@@ -1756,7 +1756,7 @@ plot_df <- business_metrics_df %>%
   mutate(Metric = factor(
 	  Metric, levels = c("Accuracy", "Recall_High_Traffic", "F1_High_Traffic")),
 		 Model = factor(
-	  Model, levels = c("Logistic Regression", "Random Forest"))) %>%
+	  Model, levels = c("Logistic Regression", "Decision Tree", "Random Forest", "XGBoost"))) %>%
   ggplot(aes(x = Model, y = Value, fill = Metric)) +
   geom_col(position = position_dodge(width = 0.8)) +
   geom_text(aes(label = round(Value, 2)), 
