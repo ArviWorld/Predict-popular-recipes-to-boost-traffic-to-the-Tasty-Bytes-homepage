@@ -28,10 +28,8 @@ editor_options:
     Project](#aim-and-methodology-of-this-project)
 3.  [Exploratory Data Analysis - EDA](#exploratory-data-analysis-EDA)
 4.  [Machine Learning Model](#machine-learning-model)
-5.  [Machine Learning Model - After Feature
-    Engineering](#machine-learning-model-after-feature-engineering)
-6.  [Results & Discussion](#results-&-discussions)
-7.  [Conclusion, Recommendations & Next Steps](#conclusion)
+5.  [Results & Discussion](#results-&-discussions)
+6.  [Conclusion, Recommendations & Next Steps](#conclusion)
 
 # Statements {#statements .unnumbered}
 
