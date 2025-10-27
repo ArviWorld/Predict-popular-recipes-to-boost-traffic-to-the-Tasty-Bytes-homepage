@@ -1,4 +1,5 @@
 # Predicting Recipe for Taste Bytes Homepage\
+
 This project applies advanced data analytics and machine learning techniques to support homepage recipe selection for Tasty Bytes. Models are developed to predict which recipes are likely to generate high website traffic, based on recipe category, nutrient composition, and serving size. Insights from these analyses guide the platform in optimizing homepage selections to maximize user engagement and subscription growth.
 ---
 ## Project Structure\
